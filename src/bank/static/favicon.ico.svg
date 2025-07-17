@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="icoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- White background for ICO -->
+  <rect width="32" height="32" fill="#ffffff"/>
+  
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="14" fill="url(#icoGradient)"/>
+  
+  <!-- Hexagon shape -->
+  <g transform="translate(16, 16)">
+    <polygon points="-5.5,-2.8 0,-5.5 5.5,-2.8 5.5,2.8 0,5.5 -5.5,2.8" fill="#ffffff" opacity="0.95"/>
+    <polygon points="-3.5,-1.8 0,-3.5 3.5,-1.8 3.5,1.8 0,3.5 -3.5,1.8" fill="url(#icoGradient)" opacity="0.8"/>
+    <circle cx="0" cy="0" r="1.2" fill="#ffffff"/>
+  </g>
+  
+  <!-- Small "N" letter -->
+  <text x="16" y="26" font-family="Arial, sans-serif" font-size="5" font-weight="bold" fill="#ffffff" text-anchor="middle">N</text>
+</svg>

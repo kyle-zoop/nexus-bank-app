@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Account Statements - Nexus Digital Bank Australia{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-file-alt me-2"></i>Account Statements</h3>
+                <p class="mb-0">View and download your account statements</p>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Account Holder: {{ user.name }}</h5>
+                        <p class="text-muted">Select an account below to view statements</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn btn-success" onclick="downloadAllStatements()">
+                            <i class="fas fa-download me-1"></i>Download All Statements
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Account Selection Tabs -->
+                <ul class="nav nav-tabs" id="accountTabs" role="tablist">
+                    {% for account_type, account in user.accounts.items() %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if loop.first %}active{% endif %}" 
+                                id="{{ account_type }}-tab" data-bs-toggle="tab" 
+                                data-bs-target="#{{ account_type }}-pane" type="button" 
+                                role="tab" aria-controls="{{ account_type }}-pane" 
+                                aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                            {% if account_type == 'checking' %}
+                                <i class="fas fa-university me-1"></i>
+                            {% elif account_type == 'savings' %}
+                                <i class="fas fa-piggy-bank me-1"></i>
+                            {% elif account_type == 'credit_card' %}
+                                <i class="fas fa-credit-card me-1"></i>
+                            {% elif account_type == 'mortgage' %}
+                                <i class="fas fa-home me-1"></i>
+                            {% elif account_type == 'investment' %}
+                                <i class="fas fa-chart-line me-1"></i>
+                            {% elif account_type == 'auto_loan' %}
+                                <i class="fas fa-car me-1"></i>
+                            {% elif account_type == 'student_loan' %}
+                                <i class="fas fa-graduation-cap me-1"></i>
+                            {% endif %}
+                            {{ account.account_type }}
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- Account Content Panes -->
+                <div class="tab-content" id="accountTabsContent">
+                    {% for account_type, account in user.accounts.items() %}
+                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                         id="{{ account_type }}-pane" role="tabpanel" 
+                         aria-labelledby="{{ account_type }}-tab">
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="card border-primary">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Account Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Account Type:</strong> {{ account.account_type }}</p>
+                                        <p><strong>Account Number:</strong> {{ account.account_number }}</p>
+                                        {% if account_type == 'credit_card' %}
+                                            <p class="h6">Current Balance: <span class="text-danger">{{ account.balance|abs|aud }}</span></p>
+                                            <p class="small">Available Credit: <span class="text-success">{{ account.available_credit|aud }}</span></p>
+                                        {% elif account_type in ['auto_loan', 'mortgage', 'student_loan'] %}
+                                            <p class="h6">Remaining Balance: <span class="text-danger">{{ account.balance|abs|aud }}</span></p>
+                                            <p class="small">Monthly Payment: {{ account.monthly_payment|aud }}</p>
+                                        {% else %}
+                                            <p class="h6">Current Balance: <span class="text-success">{{ account.balance|aud }}</span></p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Statement Options</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-outline-primary" onclick="viewStatement('{{ account_type }}', 'current')">
+                                                <i class="fas fa-eye me-1"></i>View Current Statement
+                                            </button>
+                                            <button class="btn btn-outline-secondary" onclick="downloadStatement('{{ account_type }}', 'pdf')">
+                                                <i class="fas fa-file-pdf me-1"></i>Download PDF
+                                            </button>
+                                            <button class="btn btn-outline-info" onclick="downloadStatement('{{ account_type }}', 'csv')">
+                                                <i class="fas fa-file-csv me-1"></i>Download CSV
+                                            </button>
+                                            <button class="btn btn-outline-warning" onclick="emailStatement('{{ account_type }}')">
+                                                <i class="fas fa-envelope me-1"></i>Email Statement
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transaction History -->
+                        <div class="card mt-4">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Recent Transactions</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for transaction in account.transactions[:10] %}
+                                            <tr>
+                                                <td>{{ transaction.date }}</td>
+                                                <td>{{ transaction.description }}</td>
+                                                <td class="{% if transaction.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                                                    {% if transaction.amount > 0 %}+{% endif %}{{ transaction.amount|aud }}
+                                                </td>
+                                                <td>{{ transaction.balance|aud }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {% if account.transactions|length > 10 %}
+                                <div class="text-center mt-3">
+                                    <button class="btn btn-outline-primary" onclick="viewAllTransactions('{{ account_type }}')">
+                                        <i class="fas fa-list me-1"></i>View All {{ account.transactions|length }} Transactions
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statement Period Selection Modal -->
+<div class="modal fade" id="statementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Statement Period</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Recent Statements</h6>
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action" onclick="generateStatement('current')">
+                                <strong>Current Month</strong> (July 2025)
+                                <br><small class="text-muted">July 1 - July 11, 2025</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="generateStatement('previous')">
+                                <strong>Previous Month</strong> (June 2025)
+                                <br><small class="text-muted">June 1 - June 30, 2025</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="generateStatement('may2025')">
+                                <strong>May 2025</strong>
+                                <br><small class="text-muted">May 1 - May 31, 2025</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="generateStatement('apr2025')">
+                                <strong>April 2025</strong>
+                                <br><small class="text-muted">April 1 - April 30, 2025</small>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Custom Date Range</h6>
+                        <form onsubmit="generateCustomStatement(event)">
+                            <div class="mb-3">
+                                <label class="form-label">From Date</label>
+                                <input type="date" class="form-control" id="fromDate" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">To Date</label>
+                                <input type="date" class="form-control" id="toDate" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-calendar me-1"></i>Generate Statement
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAccountType = '';
+
+function viewStatement(accountType, period) {
+    currentAccountType = accountType;
+    const modal = new bootstrap.Modal(document.getElementById('statementModal'));
+    modal.show();
+}
+
+function downloadStatement(accountType, format) {
+    // Simulate realistic download process
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Preparing...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        // Simulate file generation
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>Ready';
+        
+        setTimeout(() => {
+            alert(`Statement for ${accountType.replace('_', ' ')} account would be downloaded as ${format.toUpperCase()} file.\\n\\nFor security reasons, actual downloads are disabled in this demo.`);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 1000);
+    }, 2000);
+}
+
+function emailStatement(accountType) {
+    const email = '{{ user.email }}';
+    alert(`Statement for ${accountType.replace('_', ' ')} account would be emailed to:\\n${email}\\n\\nFor security reasons, actual emails are disabled in this demo.`);
+}
+
+function downloadAllStatements() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Preparing All Statements...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>Ready for Download';
+        
+        setTimeout(() => {
+            alert('All account statements would be downloaded as a ZIP file.\\n\\nFor security reasons, actual downloads are disabled in this demo.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 1500);
+    }, 3000);
+}
+
+function generateStatement(period) {
+    alert(`Generating ${period} statement for ${currentAccountType.replace('_', ' ')} account...\\n\\nThis would normally generate a detailed PDF statement.`);
+    bootstrap.Modal.getInstance(document.getElementById('statementModal')).hide();
+}
+
+function generateCustomStatement(event) {
+    event.preventDefault();
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    
+    if (new Date(fromDate) > new Date(toDate)) {
+        alert('From date must be before to date.');
+        return;
+    }
+    
+    alert(`Generating custom statement for ${currentAccountType.replace('_', ' ')} account\\nFrom: ${fromDate}\\nTo: ${toDate}\\n\\nThis would normally generate a detailed PDF statement.`);
+    bootstrap.Modal.getInstance(document.getElementById('statementModal')).hide();
+}
+
+function viewAllTransactions(accountType) {
+    alert(`This would show all transactions for ${accountType.replace('_', ' ')} account in a detailed view with filtering and search options.`);
+}
+
+// Auto-open specific account tab if hash is present in URL
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+        const tabButton = document.getElementById(hash + '-tab');
+        if (tabButton) {
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+        }
+    }
+});
+</script>
+
+<style>
+.nav-tabs .nav-link {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+.tab-content {
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.list-group-item:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+</style>
+{% endblock %}

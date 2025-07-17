@@ -1,0 +1,15 @@
+{
+    "include": [
+        "src",
+        "tests"
+    ],
+    "extraPaths": [
+        "src"
+    ],
+    "pythonVersion": "3.11",
+    "pythonPlatform": "Windows",
+    "typeCheckingMode": "basic",
+    "useLibraryCodeForTypes": true,
+    "reportMissingImports": "warning",
+    "reportMissingTypeStubs": false
+}

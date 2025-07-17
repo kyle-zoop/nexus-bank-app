@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section bg-primary text-white text-center py-5 mb-5 rounded glass-card">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-center mb-4">
+            <img src="{{ url_for('static', filename='icon.svg') }}" alt="Nexus" style="height: 80px;" class="me-3">
+            <div class="text-start">
+                <h1 class="display-3 mb-0 fade-in">Nexus</h1>
+                <h2 class="h4 mb-0 opacity-75">Digital Bank Australia</h2>
+            </div>
+        </div>
+        <h3 class="mb-3">Welcome to Next-Generation Banking</h3>
+        <p class="lead">Leading Digital Banking Innovation Across Australia</p>
+        <p class="h5">Innovative • Secure • Proudly Australian</p>
+        <a href="{{ url_for('login') }}" class="btn btn-light btn-lg mt-3 interactive-hover">
+            <i class="fas fa-rocket me-2"></i>
+            Launch Your Experience
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4 fade-in">
+            <div class="card-header bg-success text-white">
+                <h4><i class="fas fa-bolt me-2"></i>Next-Gen Banking Features</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-chart-line text-primary me-2"></i>Smart Savings AI</h5>
+                        <p>Our AI-powered savings optimizer helps you earn up to 5.2% APY automatically.</p>
+                        
+                        <h5><i class="fas fa-credit-card text-primary me-2"></i>Premium Credit Cards</h5>
+                        <p>Exclusive rewards and benefits for our valued customers.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-globe text-primary me-2"></i>International Banking</h5>
+                        <p>Wire transfers and currency exchange with competitive rates.</p>
+                        
+                        <h5><i class="fas fa-shield-alt text-primary me-2"></i>Advanced Security</h5>
+                        <p>Multi-factor authentication and 256-bit encryption.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-newspaper me-2"></i>Latest Updates</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>System Maintenance:</strong> Our online banking system will undergo scheduled maintenance on Sunday, July 14th from 2:00 AM - 4:00 AM EST.
+                </div>
+                <div class="alert alert-success">
+                    <i class="fas fa-gift me-2"></i>
+                    <strong>New Feature:</strong> Instant international wire transfers now available for premium account holders!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5><i class="fas fa-exclamation-triangle me-2"></i>Security Alert</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Protect yourself from fraud:</strong></p>
+                <ul class="small">
+                    <li>Never share your login credentials</li>
+                    <li>Always verify suspicious emails</li>
+                    <li>Use official bank channels only</li>
+                    <li>Monitor your accounts regularly</li>
+                </ul>
+                <a href="{{ url_for('support') }}" class="btn btn-outline-warning btn-sm">Learn More</a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-phone me-2"></i>Customer Support</h5>
+            </div>
+            <div class="card-body text-center">
+                <p><strong>24/7 Customer Service</strong></p>
+                <h4 class="text-primary">1-800-NEXUS-1</h4>
+                <p class="small text-muted">(1-800-878-7871)</p>
+                <hr>
+                <p><strong>International Support</strong></p>
+                <p>+1-555-GLOBAL-1</p>
+                <p class="small text-muted">(+1-555-456-2251)</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-clock me-2"></i>Banking Hours</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Online Banking:</strong> 24/7</p>
+                <p><strong>Phone Support:</strong> 24/7</p>
+                <p><strong>Branch Hours:</strong></p>
+                <ul class="small">
+                    <li>Mon-Fri: 9:00 AM - 6:00 PM</li>
+                    <li>Saturday: 9:00 AM - 3:00 PM</li>
+                    <li>Sunday: Closed</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h5>Why Choose Nexus Digital Bank?</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <i class="fas fa-award fa-3x text-primary mb-3"></i>
+                        <h6>Award Winning</h6>
+                        <p class="small">Recognized for excellence in customer service</p>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-lock fa-3x text-success mb-3"></i>
+                        <h6>Secure Banking</h6>
+                        <p class="small">Advanced encryption and fraud protection</p>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-users fa-3x text-warning mb-3"></i>
+                        <h6>Trusted by Innovators</h6>
+                        <p class="small">Over 2.5 million satisfied customers worldwide</p>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                        <h6>Growing Strong</h6>
+                        <p class="small">Consistent growth and financial stability since 1987</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

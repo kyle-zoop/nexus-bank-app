@@ -1,0 +1,752 @@
+{% extends "base.html" %}
+
+{% block title %}Wire Transfer - Nexus Digital Bank{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-globe-americas me-2"></i>International Wire Transfer</h3>
+                <p class="mb-0">Send funds securely worldwide with our enhanced verification system</p>
+            </div>
+            <div class="card-body">
+                <!-- Security Notice -->
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <strong>Enhanced Security Notice:</strong> All wire transfers over $1,000 require additional verification and may be subject to compliance holds for up to 3-5 business days.
+                </div>
+
+                <form id="wireTransferForm" method="POST">
+                    <!-- Source Account Selection -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="source_account" class="form-label">From Account *</label>
+                            <select class="form-select" id="source_account" name="source_account" required>
+                                <option value="">Select source account...</option>
+                                {% for account_type, account in user.accounts.items() %}
+                                    {% if account_type not in ['credit_card', 'mortgage', 'auto_loan'] %}
+                                    <option value="{{ account_type }}" data-balance="{{ account.balance }}">
+                                        {{ account_type.replace('_', ' ').title() }} - {{ account.account_number }} ({{ account.balance|aud }})
+                                    </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="amount" class="form-label">Transfer Amount (USD) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       min="1" max="999999" step="0.01" required 
+                                       placeholder="0.00">
+                            </div>
+                            <small class="text-muted">Maximum: $999,999 per transaction</small>
+                        </div>
+                    </div>
+
+                    <!-- Recipient Information -->
+                    <h5 class="mb-3"><i class="fas fa-user me-2"></i>Recipient Information</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="recipient_name" class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" id="recipient_name" name="recipient_name" 
+                                   required placeholder="Enter recipient's full legal name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="recipient_address" class="form-label">Address *</label>
+                            <input type="text" class="form-control" id="recipient_address" name="recipient_address" 
+                                   required placeholder="Full address with city, country">
+                        </div>
+                    </div>
+
+                    <!-- Bank Information -->
+                    <h5 class="mb-3"><i class="fas fa-university me-2"></i>Recipient Bank Information</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="bank_name" class="form-label">Bank Name *</label>
+                            <input type="text" class="form-control" id="bank_name" name="bank_name" 
+                                   required placeholder="Full bank name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="bank_country" class="form-label">Bank Country *</label>
+                            <select class="form-select" id="bank_country" name="bank_country" required>
+                                <option value="">Select country...</option>
+                                <option value="AU">Australia</option>
+                                <option value="AT">Austria</option>
+                                <option value="BE">Belgium</option>
+                                <option value="CA">Canada</option>
+                                <option value="DK">Denmark</option>
+                                <option value="FI">Finland</option>
+                                <option value="FR">France</option>
+                                <option value="DE">Germany</option>
+                                <option value="IT">Italy</option>
+                                <option value="JP">Japan</option>
+                                <option value="NL">Netherlands</option>
+                                <option value="NZ">New Zealand</option>
+                                <option value="NO">Norway</option>
+                                <option value="SG">Singapore</option>
+                                <option value="ES">Spain</option>
+                                <option value="SE">Sweden</option>
+                                <option value="CH">Switzerland</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="US">United States</option>
+                                <option value="OTHER">Other (requires additional verification)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="routing_code" class="form-label" id="routing_code_label">SWIFT/BIC Code *</label>
+                            <input type="text" class="form-control" id="routing_code" name="routing_code" 
+                                   required placeholder="8 or 11 character SWIFT code">
+                            <small class="text-muted" id="routing_code_help">International bank identifier</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="account_number" class="form-label" id="account_number_label">Recipient Account Number *</label>
+                            <input type="text" class="form-control" id="account_number" name="account_number" 
+                                   required placeholder="IBAN or account number">
+                            <small class="text-muted" id="account_number_help">International account number</small>
+                        </div>
+                    </div>
+
+                    <!-- Additional routing field for some countries -->
+                    <div class="row mb-3 d-none" id="additional_routing_row">
+                        <div class="col-md-6">
+                            <label for="additional_routing" class="form-label" id="additional_routing_label">Additional Routing Code</label>
+                            <input type="text" class="form-control" id="additional_routing" name="additional_routing" 
+                                   placeholder="">
+                            <small class="text-muted" id="additional_routing_help"></small>
+                        </div>
+                    </div>
+
+                    <!-- Transfer Purpose -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="purpose" class="form-label">Purpose of Transfer *</label>
+                            <select class="form-select" id="purpose" name="purpose" required>
+                                <option value="">Select purpose...</option>
+                                <option value="family_support">Family Support</option>
+                                <option value="business_payment">Business Payment</option>
+                                <option value="property_purchase">Property Purchase</option>
+                                <option value="investment">Investment</option>
+                                <option value="education">Education Expenses</option>
+                                <option value="gift">Gift</option>
+                                <option value="loan_repayment">Loan Repayment</option>
+                                <option value="other">Other (requires explanation)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="relationship" class="form-label">Relationship to Recipient *</label>
+                            <select class="form-select" id="relationship" name="relationship" required>
+                                <option value="">Select relationship...</option>
+                                <option value="family">Family Member</option>
+                                <option value="friend">Friend</option>
+                                <option value="business">Business Associate</option>
+                                <option value="contractor">Service Provider/Contractor</option>
+                                <option value="charity">Charity/Organization</option>
+                                <option value="unknown">Unknown/First Time</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Additional Details -->
+                    <div class="mb-3">
+                        <label for="transfer_message" class="form-label">Transfer Message/Reference</label>
+                        <textarea class="form-control" id="transfer_message" name="transfer_message" 
+                                  rows="3" placeholder="Optional message for recipient"></textarea>
+                    </div>
+
+                    <!-- High-Risk Warning -->
+                    <div id="high-risk-warning" class="alert alert-danger d-none" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>High-Risk Transfer Detected:</strong> This transfer requires enhanced verification and compliance review. You may be contacted by our fraud prevention team.
+                    </div>
+
+                    <!-- Compliance Checkboxes -->
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-clipboard-check me-2"></i>Compliance Verification</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="verify_identity" name="verify_identity" required>
+                                <label class="form-check-label" for="verify_identity">
+                                    I confirm that I am the authorized account holder and all information is accurate
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="verify_purpose" name="verify_purpose" required>
+                                <label class="form-check-label" for="verify_purpose">
+                                    I confirm the stated purpose of this transfer is legitimate and legal
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="verify_fraud" name="verify_fraud" required>
+                                <label class="form-check-label" for="verify_fraud">
+                                    I have not been instructed to make this transfer by someone claiming to need urgent financial assistance
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fee Information -->
+                    <div class="card bg-info text-white mb-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-info-circle me-2"></i>Transfer Fees & Timeline</h6>
+                            <ul class="mb-0">
+                                <li>Domestic transfers: $25 fee, 1-2 business days</li>
+                                <li>International transfers: $45 fee, 3-5 business days</li>
+                                <li>High-risk countries: Additional $75 compliance fee, 5-10 business days</li>
+                                <li>Transfers over $10,000: Subject to additional verification</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>Submit Wire Transfer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('wireTransferForm');
+    const amountInput = document.getElementById('amount');
+    const countrySelect = document.getElementById('bank_country');
+    const purposeSelect = document.getElementById('purpose');
+    const relationshipSelect = document.getElementById('relationship');
+    const highRiskWarning = document.getElementById('high-risk-warning');
+
+    // Country-specific banking field configurations
+    const countryBankingFields = {
+        'AU': {
+            routingCode: {
+                label: 'BSB Number *',
+                placeholder: '123-456',
+                help: 'Bank State Branch number (6 digits with dash)',
+                pattern: '^\\d{3}-\\d{3}$',
+                example: '123-456'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '123456789',
+                help: 'Australian bank account number',
+                pattern: '^\\d{6,10}$',
+                example: '123456789'
+            },
+            additionalRouting: null
+        },
+        'US': {
+            routingCode: {
+                label: 'Routing Number (ABA) *',
+                placeholder: '123456789',
+                help: 'US bank routing number (9 digits)',
+                pattern: '^\\d{9}$',
+                example: '123456789'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '1234567890',
+                help: 'US bank account number',
+                pattern: '^\\d{8,17}$',
+                example: '1234567890'
+            },
+            additionalRouting: null
+        },
+        'GB': {
+            routingCode: {
+                label: 'Sort Code *',
+                placeholder: '12-34-56',
+                help: 'UK bank sort code (6 digits with dashes)',
+                pattern: '^\\d{2}-\\d{2}-\\d{2}$',
+                example: '12-34-56'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '12345678',
+                help: 'UK bank account number',
+                pattern: '^\\d{8}$',
+                example: '12345678'
+            },
+            additionalRouting: null
+        },
+        'CA': {
+            routingCode: {
+                label: 'Institution Number *',
+                placeholder: '123',
+                help: 'Canadian institution number (3 digits)',
+                pattern: '^\\d{3}$',
+                example: '123'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '1234567',
+                help: 'Canadian bank account number',
+                pattern: '^\\d{7,12}$',
+                example: '1234567'
+            },
+            additionalRouting: {
+                label: 'Transit Number *',
+                placeholder: '12345',
+                help: 'Canadian transit number (5 digits)',
+                pattern: '^\\d{5}$',
+                example: '12345'
+            }
+        },
+        'DE': {
+            routingCode: {
+                label: 'BLZ (Bankleitzahl) *',
+                placeholder: '12345678',
+                help: 'German bank code (8 digits)',
+                pattern: '^\\d{8}$',
+                example: '12345678'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'DE89370400440532013000',
+                help: 'German IBAN (22 characters)',
+                pattern: '^DE\\d{20}$',
+                example: 'DE89370400440532013000'
+            },
+            additionalRouting: null
+        },
+        'FR': {
+            routingCode: {
+                label: 'BIC/SWIFT Code *',
+                placeholder: 'BNPAFRPP',
+                help: 'French BIC code (8 or 11 characters)',
+                pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$',
+                example: 'BNPAFRPP'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'FR1420041010050500013M02606',
+                help: 'French IBAN (27 characters)',
+                pattern: '^FR\\d{25}$',
+                example: 'FR1420041010050500013M02606'
+            },
+            additionalRouting: null
+        },
+        'JP': {
+            routingCode: {
+                label: 'Bank Code *',
+                placeholder: '1234',
+                help: 'Japanese bank code (4 digits)',
+                pattern: '^\\d{4}$',
+                example: '1234'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '1234567',
+                help: 'Japanese bank account number',
+                pattern: '^\\d{7}$',
+                example: '1234567'
+            },
+            additionalRouting: {
+                label: 'Branch Code *',
+                placeholder: '123',
+                help: 'Japanese branch code (3 digits)',
+                pattern: '^\\d{3}$',
+                example: '123'
+            }
+        },
+        'SG': {
+            routingCode: {
+                label: 'SWIFT/BIC Code *',
+                placeholder: 'DBSSSGSG',
+                help: 'Singapore SWIFT code (8 or 11 characters)',
+                pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$',
+                example: 'DBSSSGSG'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '123-456789-001',
+                help: 'Singapore bank account number',
+                pattern: '^\\d{3}-\\d{6}-\\d{3}$',
+                example: '123-456789-001'
+            },
+            additionalRouting: null
+        },
+        'CH': {
+            routingCode: {
+                label: 'BC Number *',
+                placeholder: '12345',
+                help: 'Swiss bank clearing number (5 digits)',
+                pattern: '^\\d{5}$',
+                example: '12345'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'CH9300762011623852957',
+                help: 'Swiss IBAN (21 characters)',
+                pattern: '^CH\\d{19}$',
+                example: 'CH9300762011623852957'
+            },
+            additionalRouting: null
+        },
+        'NZ': {
+            routingCode: {
+                label: 'Bank Code *',
+                placeholder: '12',
+                help: 'New Zealand bank code (2 digits)',
+                pattern: '^\\d{2}$',
+                example: '12'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '1234-5678901-00',
+                help: 'NZ account number (15-16 digits with dashes)',
+                pattern: '^\\d{4}-\\d{7}-\\d{2,3}$',
+                example: '1234-5678901-00'
+            },
+            additionalRouting: {
+                label: 'Branch Code *',
+                placeholder: '1234',
+                help: 'New Zealand branch code (4 digits)',
+                pattern: '^\\d{4}$',
+                example: '1234'
+            }
+        },
+        'NL': {
+            routingCode: {
+                label: 'BIC Code *',
+                placeholder: 'ABNANL2A',
+                help: 'Dutch BIC code (8 or 11 characters)',
+                pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$',
+                example: 'ABNANL2A'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'NL91ABNA0417164300',
+                help: 'Dutch IBAN (18 characters)',
+                pattern: '^NL\\d{16}$',
+                example: 'NL91ABNA0417164300'
+            },
+            additionalRouting: null
+        },
+        'IT': {
+            routingCode: {
+                label: 'ABI Code *',
+                placeholder: '12345',
+                help: 'Italian bank code (5 digits)',
+                pattern: '^\\d{5}$',
+                example: '12345'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'IT60X0542811101000000123456',
+                help: 'Italian IBAN (27 characters)',
+                pattern: '^IT\\d{25}$',
+                example: 'IT60X0542811101000000123456'
+            },
+            additionalRouting: {
+                label: 'CAB Code *',
+                placeholder: '12345',
+                help: 'Italian branch code (5 digits)',
+                pattern: '^\\d{5}$',
+                example: '12345'
+            }
+        },
+        'ES': {
+            routingCode: {
+                label: 'BIC Code *',
+                placeholder: 'BBVAESMM',
+                help: 'Spanish BIC code (8 or 11 characters)',
+                pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$',
+                example: 'BBVAESMM'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'ES9121000418450200051332',
+                help: 'Spanish IBAN (24 characters)',
+                pattern: '^ES\\d{22}$',
+                example: 'ES9121000418450200051332'
+            },
+            additionalRouting: null
+        },
+        'BE': {
+            routingCode: {
+                label: 'BIC Code *',
+                placeholder: 'KREDBEBB',
+                help: 'Belgian BIC code (8 or 11 characters)',
+                pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$',
+                example: 'KREDBEBB'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'BE68539007547034',
+                help: 'Belgian IBAN (16 characters)',
+                pattern: '^BE\\d{14}$',
+                example: 'BE68539007547034'
+            },
+            additionalRouting: null
+        },
+        'AT': {
+            routingCode: {
+                label: 'BLZ *',
+                placeholder: '12345',
+                help: 'Austrian bank code (5 digits)',
+                pattern: '^\\d{5}$',
+                example: '12345'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'AT611904300234573201',
+                help: 'Austrian IBAN (20 characters)',
+                pattern: '^AT\\d{18}$',
+                example: 'AT611904300234573201'
+            },
+            additionalRouting: null
+        },
+        'SE': {
+            routingCode: {
+                label: 'Bank Code *',
+                placeholder: '1234',
+                help: 'Swedish bank code (4 digits)',
+                pattern: '^\\d{4}$',
+                example: '1234'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '123 456 789',
+                help: 'Swedish account number',
+                pattern: '^\\d{3}\\s\\d{3}\\s\\d{3}$',
+                example: '123 456 789'
+            },
+            additionalRouting: null
+        },
+        'NO': {
+            routingCode: {
+                label: 'Bank Code *',
+                placeholder: '1234',
+                help: 'Norwegian bank code (4 digits)',
+                pattern: '^\\d{4}$',
+                example: '1234'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '12345678901',
+                help: 'Norwegian account number (11 digits)',
+                pattern: '^\\d{11}$',
+                example: '12345678901'
+            },
+            additionalRouting: null
+        },
+        'DK': {
+            routingCode: {
+                label: 'Registration Number *',
+                placeholder: '1234',
+                help: 'Danish registration number (4 digits)',
+                pattern: '^\\d{4}$',
+                example: '1234'
+            },
+            accountNumber: {
+                label: 'Account Number *',
+                placeholder: '1234567890',
+                help: 'Danish account number (up to 10 digits)',
+                pattern: '^\\d{1,10}$',
+                example: '1234567890'
+            },
+            additionalRouting: null
+        },
+        'FI': {
+            routingCode: {
+                label: 'BIC Code *',
+                placeholder: 'NDEAFIHH',
+                help: 'Finnish BIC code (8 or 11 characters)',
+                pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$',
+                example: 'NDEAFIHH'
+            },
+            accountNumber: {
+                label: 'IBAN *',
+                placeholder: 'FI2112345600000785',
+                help: 'Finnish IBAN (18 characters)',
+                pattern: '^FI\\d{16}$',
+                example: 'FI2112345600000785'
+            },
+            additionalRouting: null
+        }
+    };
+
+    // Update form fields based on selected country
+    function updateBankingFields() {
+        const selectedCountry = countrySelect.value;
+        const config = countryBankingFields[selectedCountry];
+        
+        const routingCodeField = document.getElementById('routing_code');
+        const accountNumberField = document.getElementById('account_number');
+        const additionalRoutingRow = document.getElementById('additional_routing_row');
+        const additionalRoutingField = document.getElementById('additional_routing');
+        
+        const routingCodeLabel = document.getElementById('routing_code_label');
+        const accountNumberLabel = document.getElementById('account_number_label');
+        const additionalRoutingLabel = document.getElementById('additional_routing_label');
+        
+        const routingCodeHelp = document.getElementById('routing_code_help');
+        const accountNumberHelp = document.getElementById('account_number_help');
+        const additionalRoutingHelp = document.getElementById('additional_routing_help');
+
+        if (config) {
+            // Update routing code field
+            routingCodeLabel.textContent = config.routingCode.label;
+            routingCodeField.placeholder = config.routingCode.placeholder;
+            routingCodeHelp.textContent = config.routingCode.help;
+            routingCodeField.pattern = config.routingCode.pattern;
+            routingCodeField.title = `Format: ${config.routingCode.example}`;
+
+            // Update account number field
+            accountNumberLabel.textContent = config.accountNumber.label;
+            accountNumberField.placeholder = config.accountNumber.placeholder;
+            accountNumberHelp.textContent = config.accountNumber.help;
+            accountNumberField.pattern = config.accountNumber.pattern;
+            accountNumberField.title = `Format: ${config.accountNumber.example}`;
+
+            // Handle additional routing field
+            if (config.additionalRouting) {
+                additionalRoutingRow.classList.remove('d-none');
+                additionalRoutingLabel.textContent = config.additionalRouting.label;
+                additionalRoutingField.placeholder = config.additionalRouting.placeholder;
+                additionalRoutingHelp.textContent = config.additionalRouting.help;
+                additionalRoutingField.pattern = config.additionalRouting.pattern;
+                additionalRoutingField.title = `Format: ${config.additionalRouting.example}`;
+                additionalRoutingField.required = true;
+            } else {
+                additionalRoutingRow.classList.add('d-none');
+                additionalRoutingField.required = false;
+                additionalRoutingField.value = '';
+            }
+        } else {
+            // Default international fields
+            routingCodeLabel.textContent = 'SWIFT/BIC Code *';
+            routingCodeField.placeholder = '8 or 11 character SWIFT code';
+            routingCodeHelp.textContent = 'International bank identifier';
+            routingCodeField.pattern = '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$';
+            routingCodeField.title = 'Format: ABCDEF12 or ABCDEF12345';
+
+            accountNumberLabel.textContent = 'Recipient Account Number *';
+            accountNumberField.placeholder = 'IBAN or account number';
+            accountNumberHelp.textContent = 'International account number';
+            accountNumberField.pattern = '';
+            accountNumberField.title = '';
+
+            additionalRoutingRow.classList.add('d-none');
+            additionalRoutingField.required = false;
+            additionalRoutingField.value = '';
+        }
+    }
+
+    // Check for high-risk indicators
+    function checkHighRisk() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const country = countrySelect.value;
+        const purpose = purposeSelect.value;
+        const relationship = relationshipSelect.value;
+
+        let isHighRisk = false;
+
+        // High-risk conditions
+        if (amount > 5000) isHighRisk = true;
+        if (country === 'OTHER') isHighRisk = true;
+        if (purpose === 'other' || purpose === 'gift') isHighRisk = true;
+        if (relationship === 'unknown') isHighRisk = true;
+
+        if (isHighRisk) {
+            highRiskWarning.classList.remove('d-none');
+        } else {
+            highRiskWarning.classList.add('d-none');
+        }
+    }
+
+    // Add event listeners
+    countrySelect.addEventListener('change', function() {
+        updateBankingFields();
+        checkHighRisk();
+    });
+    
+    amountInput.addEventListener('input', checkHighRisk);
+    purposeSelect.addEventListener('change', checkHighRisk);
+    relationshipSelect.addEventListener('change', checkHighRisk);
+
+    // Initialize fields on page load
+    updateBankingFields();
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+        submitBtn.disabled = true;
+
+        // Simulate processing time
+        setTimeout(() => {
+            // Redirect to verification page
+            window.location.href = '{{ url_for("wire_verification") }}?' + new URLSearchParams(new FormData(form)).toString();
+        }, 3000);
+    });
+});
+</script>
+
+<style>
+.form-control[pattern]:invalid {
+    border-color: #dc3545;
+}
+
+.form-control[pattern]:valid {
+    border-color: #198754;
+}
+
+.country-specific-field {
+    transition: all 0.3s ease;
+}
+
+.field-updating {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+}
+
+.small.text-muted {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.input-group .form-control {
+    border-radius: 0.375rem;
+}
+
+#additional_routing_row {
+    transition: all 0.3s ease;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.country-info-box {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.country-info-box small {
+    display: block;
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Wire Transfer Verification - Nexus Digital Bank{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h3><i class="fas fa-exclamation-triangle me-2"></i>Transfer Verification Required</h3>
+                <p class="mb-0">Additional verification needed for compliance and security</p>
+            </div>
+            <div class="card-body">
+                <!-- Transfer Summary -->
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h5><i class="fas fa-file-alt me-2"></i>Transfer Summary</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Amount:</strong> $<span id="transfer-amount">{{ request.args.get('amount', '0.00') }}</span></p>
+                                <p><strong>Recipient:</strong> <span id="recipient-name">{{ request.args.get('recipient_name', 'N/A') }}</span></p>
+                                <p><strong>Bank:</strong> <span id="bank-name">{{ request.args.get('bank_name', 'N/A') }}</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Country:</strong> <span id="bank-country">{{ request.args.get('bank_country', 'N/A') }}</span></p>
+                                <p><strong>Purpose:</strong> <span id="purpose">{{ request.args.get('purpose', 'N/A') }}</span></p>
+                                <p><strong>Reference:</strong> WTR-{{ moment().format('YYYYMMDD') }}-{{ range(10000, 99999) | random }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verification Steps -->
+                <div class="verification-steps">
+                    <h5><i class="fas fa-tasks me-2"></i>Required Verification Steps</h5>
+                    
+                    <!-- Step 1: Identity Verification -->
+                    <div class="card mb-3" id="step-1">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-id-card me-2"></i>Step 1: Identity Verification</span>
+                            <span class="badge bg-warning">Pending</span>
+                        </div>
+                        <div class="card-body">
+                            <p>To comply with anti-money laundering regulations, we need to verify your identity.</p>
+                            <div class="mb-3">
+                                <label class="form-label">Upload Government-Issued ID *</label>
+                                <input type="file" class="form-control" id="id-upload" accept=".jpg,.jpeg,.png,.pdf">
+                                <small class="text-muted">Accepted formats: JPG, PNG, PDF (max 5MB)</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Social Security Number (Last 4 digits) *</label>
+                                <input type="text" class="form-control" id="ssn-last4" maxlength="4" placeholder="####">
+                            </div>
+                            <button class="btn btn-primary" onclick="completeStep(1)">
+                                <i class="fas fa-check me-1"></i>Submit Identity Verification
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Source of Funds -->
+                    <div class="card mb-3" id="step-2" style="opacity: 0.5;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-dollar-sign me-2"></i>Step 2: Source of Funds Verification</span>
+                            <span class="badge bg-secondary">Locked</span>
+                        </div>
+                        <div class="card-body">
+                            <p>Please provide documentation for the source of these funds.</p>
+                            <div class="mb-3">
+                                <label class="form-label">Source of Funds *</label>
+                                <select class="form-control" id="funds-source" disabled>
+                                    <option value="">Select source...</option>
+                                    <option value="salary">Employment/Salary</option>
+                                    <option value="business">Business Income</option>
+                                    <option value="investment">Investment Returns</option>
+                                    <option value="inheritance">Inheritance</option>
+                                    <option value="gift">Gift from Family</option>
+                                    <option value="loan">Personal Loan</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Supporting Documentation</label>
+                                <input type="file" class="form-control" id="funds-upload" accept=".jpg,.jpeg,.png,.pdf" disabled>
+                                <small class="text-muted">Pay stubs, bank statements, or other proof of income</small>
+                            </div>
+                            <button class="btn btn-primary" onclick="completeStep(2)" disabled>
+                                <i class="fas fa-check me-1"></i>Submit Funds Verification
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Compliance Review -->
+                    <div class="card mb-3" id="step-3" style="opacity: 0.5;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-shield-alt me-2"></i>Step 3: Compliance Department Review</span>
+                            <span class="badge bg-secondary">Locked</span>
+                        </div>
+                        <div class="card-body">
+                            <p>Your transfer is being reviewed by our compliance department for regulatory approval.</p>
+                            <div class="alert alert-info">
+                                <i class="fas fa-clock me-2"></i>
+                                <strong>Estimated Review Time:</strong> 3-5 business days
+                                <br><small>You will receive an email notification when the review is complete.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Additional Information (if requested)</label>
+                                <textarea class="form-control" id="additional-info" rows="3" 
+                                          placeholder="Our compliance team may request additional information..." disabled></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="completeStep(3)" disabled>
+                                <i class="fas fa-hourglass-half me-1"></i>Waiting for Review
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Final Authorization -->
+                    <div class="card mb-3" id="step-4" style="opacity: 0.5;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-key me-2"></i>Step 4: Final Authorization</span>
+                            <span class="badge bg-secondary">Locked</span>
+                        </div>
+                        <div class="card-body">
+                            <p>Final authorization code will be sent to your registered phone number.</p>
+                            <div class="mb-3">
+                                <label class="form-label">Authorization Code *</label>
+                                <input type="text" class="form-control" id="auth-code" 
+                                       placeholder="Enter 6-digit code from SMS" maxlength="6" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <button class="btn btn-outline-secondary" onclick="sendAuthCode()" disabled>
+                                    <i class="fas fa-sms me-1"></i>Send Authorization Code
+                                </button>
+                            </div>
+                            <button class="btn btn-success" onclick="completeStep(4)" disabled>
+                                <i class="fas fa-paper-plane me-1"></i>Authorize Transfer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="card bg-primary text-white mt-4">
+                    <div class="card-body">
+                        <h6><i class="fas fa-phone me-2"></i>Need Assistance?</h6>
+                        <p class="mb-1"><strong>Wire Transfer Support:</strong> 1-800-NEXUS-1 (Option 3)</p>
+                        <p class="mb-1"><strong>Compliance Department:</strong> compliance@nexusdigitalbank.com</p>
+                        <p class="mb-0"><small>Available 24/7 for urgent compliance matters</small></p>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Verification Progress</span>
+                        <span id="progress-text">0 of 4 steps completed</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%" 
+                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let completedSteps = 0;
+const totalSteps = 4;
+
+function completeStep(stepNumber) {
+    const step = document.getElementById(`step-${stepNumber}`);
+    const badge = step.querySelector('.badge');
+    const button = step.querySelector('button');
+    
+    // Show loading state
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        // Mark as completed
+        badge.textContent = 'Completed';
+        badge.className = 'badge bg-success';
+        button.innerHTML = '<i class="fas fa-check me-1"></i>Completed';
+        
+        completedSteps++;
+        updateProgress();
+        
+        // Unlock next step
+        if (stepNumber < totalSteps) {
+            const nextStep = document.getElementById(`step-${stepNumber + 1}`);
+            nextStep.style.opacity = '1';
+            nextStep.querySelector('.badge').textContent = 'In Progress';
+            nextStep.querySelector('.badge').className = 'badge bg-warning';
+            
+            // Enable form elements in next step
+            const inputs = nextStep.querySelectorAll('input, select, textarea, button');
+            inputs.forEach(input => input.disabled = false);
+        }
+        
+        // Special handling for different steps
+        if (stepNumber === 1) {
+            // Add realistic delay for identity verification
+            setTimeout(() => {
+                showAlert('Identity verification submitted. Processing typically takes 1-2 hours.', 'info');
+            }, 1000);
+        } else if (stepNumber === 2) {
+            // Add delay for funds verification
+            setTimeout(() => {
+                showAlert('Source of funds documentation received. Compliance review has been initiated.', 'info');
+            }, 1500);
+        } else if (stepNumber === 3) {
+            // Simulate compliance review delay
+            showAlert('Your transfer has been escalated to our senior compliance team due to the transfer amount and destination country. Additional review time may be required.', 'warning');
+        } else if (stepNumber === 4) {
+            // Final completion
+            setTimeout(() => {
+                window.location.href = '{{ url_for("wire_confirmation") }}';
+            }, 2000);
+        }
+        
+    }, Math.random() * 3000 + 2000); // Random delay between 2-5 seconds
+}
+
+function updateProgress() {
+    const percentage = (completedSteps / totalSteps) * 100;
+    document.getElementById('progress-bar').style.width = percentage + '%';
+    document.getElementById('progress-bar').setAttribute('aria-valuenow', percentage);
+    document.getElementById('progress-text').textContent = `${completedSteps} of ${totalSteps} steps completed`;
+}
+
+function sendAuthCode() {
+    const button = event.target;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = '<i class="fas fa-check me-1"></i>Code Sent';
+        showAlert('Authorization code sent to your registered phone number ending in **67. Please check your SMS messages.', 'success');
+        
+        // Enable the auth code input
+        document.getElementById('auth-code').disabled = false;
+        document.getElementById('auth-code').focus();
+    }, 3000);
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.col-lg-8');
+    container.insertBefore(alert, container.firstChild);
+    
+    // Auto-dismiss after 10 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 10000);
+}
+
+// Auto-fill some demo data for testing
+document.addEventListener('DOMContentLoaded', function() {
+    // Show initial warning about high-risk transfer
+    const amount = parseFloat('{{ request.args.get("amount", "0") }}');
+    if (amount > 5000) {
+        showAlert('High-value transfer detected. Enhanced verification procedures are in effect.', 'warning');
+    }
+});
+</script>
+{% endblock %}

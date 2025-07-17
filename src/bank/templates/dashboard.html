@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Nexus Digital Bank Australia{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-primary text-white glass-card fade-in">
+            <div class="card-body">
+                <h2><i class="fas fa-rocket me-2"></i>Welcome back, {{ user.name }}!</h2>
+                <p class="mb-0">Last login: Today at {{ current_time }}</p>
+                <button class="btn btn-outline-light btn-sm float-end interactive-hover" onclick="refreshDashboard()" id="refreshBtn" title="Refresh account balances">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Account Overview Cards -->
+<div class="row mb-4" id="accountCards">
+    {% for account_type, account in user.accounts.items() %}
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card h-100 {% if account_type == 'credit_card' or account_type == 'mortgage' or account_type == 'auto_loan' or account_type == 'student_loan' %}border-warning{% else %}border-success{% endif %}">
+            <div class="card-header {% if account_type == 'credit_card' or account_type == 'mortgage' or account_type == 'auto_loan' or account_type == 'student_loan' %}bg-warning text-dark{% else %}bg-success text-white{% endif %}">
+                <h6 class="mb-0">
+                    {% if account_type == 'checking' %}
+                        <i class="fas fa-university me-2"></i>
+                    {% elif account_type == 'savings' %}
+                        <i class="fas fa-piggy-bank me-2"></i>
+                    {% elif account_type == 'credit_card' %}
+                        <i class="fas fa-credit-card me-2"></i>
+                    {% elif account_type == 'mortgage' %}
+                        <i class="fas fa-home me-2"></i>
+                    {% elif account_type == 'investment' %}
+                        <i class="fas fa-chart-line me-2"></i>
+                    {% elif account_type == 'auto_loan' %}
+                        <i class="fas fa-car me-2"></i>
+                    {% elif account_type == 'student_loan' %}
+                        <i class="fas fa-graduation-cap me-2"></i>
+                    {% endif %}
+                    {{ account.account_type }}
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">{{ account.account_number }}</p>
+                
+                {% if account_type == 'credit_card' %}
+                    <h4 class="{% if account.balance < 0 %}text-danger{% else %}text-success{% endif %} balance-amount" data-balance="{{ account_type }}">
+                        {{ account.balance|abs|aud }}
+                    </h4>
+                    <p class="small text-muted">Current Balance</p>
+                    <p class="small">Available Credit: <strong class="text-success" data-available-credit="{{ account_type }}">{{ account.available_credit|aud }}</strong></p>
+                    <p class="small">Credit Limit: {{ account.credit_limit|aud }}</p>
+                    {% if account.min_payment %}
+                        <p class="small">Min Payment: <strong class="text-warning">{{ account.min_payment|aud }}</strong></p>
+                    {% endif %}
+                
+                {% elif account_type == 'mortgage' or account_type == 'auto_loan' or account_type == 'student_loan' %}
+                    <h4 class="text-danger balance-amount" data-balance="{{ account_type }}">
+                        {{ account.balance|abs|aud }}
+                    </h4>
+                    <p class="small text-muted">Remaining Balance</p>
+                    {% if account.monthly_payment %}
+                        <p class="small">Monthly Payment: <strong>{{ account.monthly_payment|aud }}</strong></p>
+                    {% endif %}
+                    {% if account.interest_rate %}
+                        <p class="small">Interest Rate: {{ account.interest_rate }}% APR</p>
+                    {% endif %}
+                    {% if account.next_payment_date %}
+                        <p class="small">Next Payment: {{ account.next_payment_date }}</p>
+                    {% endif %}
+                
+                {% elif account_type == 'investment' %}
+                    <h4 class="text-success balance-amount" data-balance="{{ account_type }}">
+                        {{ account.balance|aud }}
+                    </h4>
+                    <p class="small text-muted">Portfolio Value</p>
+                    {% if account.ytd_return %}
+                        <p class="small">YTD Return: <strong class="text-success">+{{ account.ytd_return }}%</strong></p>
+                    {% endif %}
+                    {% if account.available_balance %}
+                        <p class="small">Available: <strong class="text-success" data-available-balance="{{ account_type }}">{{ account.available_balance|aud }}</strong></p>
+                    {% endif %}
+                
+                {% else %}
+                    <h4 class="text-success balance-amount" data-balance="{{ account_type }}">
+                        {{ account.balance|aud }}
+                    </h4>
+                    <p class="small text-muted">Available Balance</p>
+                    {% if account.interest_rate %}
+                        <p class="small">Interest Rate: {{ account.interest_rate }}% APY</p>
+                    {% endif %}
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('statements') }}#{{ account_type }}" class="btn btn-sm btn-outline-primary me-2">
+                        View Statements
+                    </a>
+                    <a href="{{ url_for('transfer') }}" class="btn btn-sm btn-outline-secondary me-2">
+                        Transfer
+                    </a>
+                    <a href="{{ url_for('wire_transfer') }}" class="btn btn-sm btn-outline-warning">
+                        Wire Transfer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Recent Transactions Across All Accounts -->
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-list me-2"></i>Recent Activity</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Account</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set all_transactions = [] %}
+                            {% for account_type, account in user.accounts.items() %}
+                                {% for transaction in account.transactions %}
+                                    {% set _ = all_transactions.append({
+                                        'date': transaction.date,
+                                        'description': transaction.description,
+                                        'amount': transaction.amount,
+                                        'account_type': account_type,
+                                        'account_number': account.account_number
+                                    }) %}
+                                {% endfor %}
+                            {% endfor %}
+                            {% set sorted_transactions = all_transactions|sort(attribute='date', reverse=True) %}
+                            {% for transaction in sorted_transactions[:10] %}
+                            <tr>
+                                <td>{{ transaction.date }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ transaction.account_type.title() }}</span>
+                                    <br><small class="text-muted">{{ transaction.account_number[-4:] }}</small>
+                                </td>
+                                <td>{{ transaction.description }}</td>
+                                <td class="{% if transaction.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if transaction.amount > 0 %}+{% endif %}{{ transaction.amount|aud }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="text-center">
+                    <a href="{{ url_for('statements') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt me-1"></i>View All Statements
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('transfer') }}" class="btn btn-primary">
+                        <i class="fas fa-exchange-alt me-2"></i>Transfer Money
+                    </a>
+                    <button class="btn btn-outline-primary" onclick="payBills()">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Pay Bills
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="depositCheck()">
+                        <i class="fas fa-mobile-alt me-2"></i>Mobile Deposit
+                    </button>
+                    <a href="{{ url_for('statements') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i>Download Statements
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Summary -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-chart-pie me-2"></i>Account Summary</h5>
+            </div>
+            <div class="card-body">
+                {% set checking_balance = user.accounts.checking.balance if user.accounts.checking else 0 %}
+                {% set savings_balance = user.accounts.savings.balance if user.accounts.savings else 0 %}
+                {% set investment_balance = user.accounts.investment.balance if user.accounts.investment else 0 %}
+                {% set credit_card_balance = user.accounts.credit_card.balance|abs if user.accounts.credit_card else 0 %}
+                {% set mortgage_balance = user.accounts.mortgage.balance|abs if user.accounts.mortgage else 0 %}
+                {% set auto_loan_balance = user.accounts.auto_loan.balance|abs if user.accounts.auto_loan else 0 %}
+                {% set student_loan_balance = user.accounts.student_loan.balance|abs if user.accounts.student_loan else 0 %}
+                {% set business_line_balance = user.accounts.business_line.balance|abs if user.accounts.business_line else 0 %}
+                
+                {% set total_assets = checking_balance + savings_balance + investment_balance %}
+                {% set total_liabilities = credit_card_balance + mortgage_balance + auto_loan_balance + student_loan_balance + business_line_balance %}
+                {% set net_worth = total_assets - total_liabilities %}
+                
+                <p><strong>Total Assets:</strong> <span class="text-success">{{ total_assets|aud }}</span></p>
+                <p><strong>Total Liabilities:</strong> <span class="text-danger">{{ total_liabilities|aud }}</span></p>
+                <hr>
+                <p><strong>Net Worth:</strong> <span class="{% if net_worth > 0 %}text-success{% else %}text-danger{% endif %}">{{ net_worth|aud }}</span></p>
+            </div>
+        </div>
+
+        <!-- Security Status -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-shield-alt me-2"></i>Security Status</h5>
+            </div>
+            <div class="card-body">
+                <p><i class="fas fa-check text-success me-2"></i>Two-Factor Authentication: <strong>Active</strong></p>
+                <p><i class="fas fa-check text-success me-2"></i>Account Monitoring: <strong>Enabled</strong></p>
+                <p><i class="fas fa-check text-success me-2"></i>SSL Encryption: <strong>256-bit</strong></p>
+                <hr>
+                <button class="btn btn-outline-success btn-sm w-100">
+                    <i class="fas fa-cog me-1"></i>Security Settings
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewAccount(accountType) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Account Details - ${accountType.charAt(0).toUpperCase() + accountType.slice(1).replace('_', ' ')}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Detailed account information and transaction history for ${accountType.replace('_', ' ')} account.
+                    </div>
+                    <p>This feature provides comprehensive account details and transaction history.</p>
+                    <p>For full account management, please visit a branch or call customer service.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="{{ url_for('statements') }}" class="btn btn-primary">View Statements</a>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+    
+    modal.addEventListener('hidden.bs.modal', function() {
+        document.body.removeChild(modal);
+    });
+}
+
+function payBills() {
+    alert('Bill Pay feature coming soon! This feature is currently under development.');
+}
+
+function depositCheck() {
+    alert('Mobile Check Deposit: Please use our mobile app for check deposits. Download from App Store or Google Play.');
+}
+
+function refreshDashboard() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    const originalText = refreshBtn.innerHTML;
+    
+    // Show loading state
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    refreshBtn.disabled = true;
+    
+    // Call the API to get updated balances
+    fetch('/api/balance')
+        .then(response => response.json())
+        .then(data => {
+            if (data.accounts) {
+                // Update each account's balance display
+                Object.keys(data.accounts).forEach(accountType => {
+                    const accountData = data.accounts[accountType];
+                    const balanceElement = document.querySelector(`[data-balance="${accountType}"]`);
+                    const availableCreditElement = document.querySelector(`[data-available-credit="${accountType}"]`);
+                    const availableBalanceElement = document.querySelector(`[data-available-balance="${accountType}"]`);
+                    
+                    if (balanceElement) {
+                        const formattedBalance = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD'
+                        }).format(Math.abs(accountData.balance));
+                        balanceElement.textContent = formattedBalance;
+                    }
+                    
+                    if (availableCreditElement && accountData.available_credit !== undefined) {
+                        const formattedCredit = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD'
+                        }).format(accountData.available_credit);
+                        availableCreditElement.textContent = formattedCredit;
+                    }
+                    
+                    if (availableBalanceElement && accountData.available_balance !== undefined) {
+                        const formattedAvailable = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD'
+                        }).format(accountData.available_balance);
+                        availableBalanceElement.textContent = formattedAvailable;
+                    }
+                });
+                
+                // Show success message
+                setTimeout(() => {
+                    refreshBtn.innerHTML = '<i class="fas fa-check text-success me-1"></i>Updated';
+                    setTimeout(() => {
+                        refreshBtn.innerHTML = originalText;
+                        refreshBtn.disabled = false;
+                    }, 1500);
+                }, 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing balances:', error);
+            refreshBtn.innerHTML = '<i class="fas fa-exclamation-triangle text-warning me-1"></i>Error';
+            setTimeout(() => {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+            }, 2000);
+        });
+}
+
+// Auto-refresh when page loads if coming from a transfer
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user just completed a transfer (look for success flash messages)
+    const flashMessages = document.querySelectorAll('.alert-success');
+    let hasTransferMessage = false;
+    
+    flashMessages.forEach(message => {
+        if (message.textContent.toLowerCase().includes('transfer') && 
+            message.textContent.toLowerCase().includes('completed')) {
+            hasTransferMessage = true;
+        }
+    });
+    
+    // Auto-refresh balances every 60 seconds for realism
+    setInterval(() => {
+        // Only auto-refresh if user is actively viewing the page
+        if (!document.hidden) {
+            refreshDashboard();
+        }
+    }, 60000);
+    
+    // If there's a transfer completion message, auto-refresh once after a short delay
+    if (hasTransferMessage) {
+        setTimeout(() => {
+            refreshDashboard();
+        }, 2000);
+    }
+});
+</script>
+
+<style>
+.highlight {
+    animation: pulse 1s;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.alert-sm {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

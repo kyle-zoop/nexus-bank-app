@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}Transfer Money - Nexus Digital Bank{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-exchange-alt me-2"></i>Money Transfer</h3>
+                <p class="mb-0">Send money securely to any bank account</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="transferForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>From Account</h5>
+                            <div class="mb-3">
+                                <label for="from_account" class="form-label">Select Source Account</label>
+                                <select class="form-select" id="from_account" name="from_account" required onchange="updateSourceAccount()">
+                                    <option value="">Choose account...</option>
+                                    {% for account_type, account in user.accounts.items() %}
+                                        {% if account_type not in ['mortgage', 'auto_loan'] %}
+                                        <option value="{{ account_type }}" data-balance="{{ account.balance }}" data-number="{{ account.account_number }}">
+                                            {{ account.account_type }} - {{ account.account_number }}
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="card bg-light mb-3" id="selected_account_info" style="display: none;">
+                                <div class="card-body">
+                                    <h6 id="account_type_display"></h6>
+                                    <p class="mb-1" id="account_number_display"></p>
+                                    <h5 class="text-success" id="available_balance_display"></h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Transfer Details</h5>
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Transfer Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="amount" name="amount" 
+                                           step="0.01" min="0.01" max="1000000" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="transfer_type" class="form-label">Transfer Type</label>
+                                <select class="form-select" id="transfer_type" name="transfer_type" required>
+                                    <option value="">Select transfer type</option>
+                                    <option value="internal">Internal Transfer (Between My Accounts)</option>
+                                    <option value="domestic">Domestic Wire Transfer</option>
+                                    <option value="international">International Wire Transfer</option>
+                                    <option value="ach">ACH Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Internal Transfer Section -->
+                    <div id="internal_transfer_section" style="display: none;">
+                        <h5>Transfer To (Internal)</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="to_account" class="form-label">Select Destination Account</label>
+                                    <select class="form-select" id="to_account" name="to_account">
+                                        <option value="">Choose account...</option>
+                                        {% for account_type, account in user.accounts.items() %}
+                                            {% if account_type not in ['mortgage', 'auto_loan'] %}
+                                            <option value="{{ account_type }}">
+                                                {{ account.account_type }} - {{ account.account_number }}
+                                            </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="memo" class="form-label">Memo/Reference</label>
+                                    <input type="text" class="form-control" id="memo" name="memo" 
+                                           placeholder="Optional reference note">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- External Transfer Section -->
+                    <div id="external_transfer_section" style="display: none;">
+                    <h5>Recipient Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="recipient_name" class="form-label">Recipient Name</label>
+                                <input type="text" class="form-control" id="recipient_name" name="recipient">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="recipient_account" class="form-label">Account Number</label>
+                                <input type="text" class="form-control" id="recipient_account" name="recipient_account">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="routing" class="form-label">Routing Number</label>
+                                <input type="text" class="form-control" id="routing" name="routing">
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="verifyAccount()">
+                                    <i class="fas fa-check me-1"></i>Verify Account
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="bank_name" class="form-label">Bank Name</label>
+                                <input type="text" class="form-control" id="bank_name" name="bank_name">
+                            </div>
+                            
+                            <div class="mb-3" id="swift_section" style="display: none;">
+                                <label for="swift_code" class="form-label">SWIFT Code (International)</label>
+                                <input type="text" class="form-control" id="swift_code" name="swift_code">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="memo_external" class="form-label">Memo/Reference</label>
+                                <input type="text" class="form-control" id="memo_external" name="memo_external" 
+                                       placeholder="Optional reference note">
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Important:</strong> Please verify all recipient information carefully. 
+                                Wire transfers cannot be reversed once processed.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="window.history.back()">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="transferBtn">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            <span id="transferText">Initiate Transfer</span>
+                            <span id="transferSpinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-info-circle me-2"></i>Transfer Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>Transfer Limits</h6>
+                <ul class="small">
+                    <li>Daily limit: $50,000</li>
+                    <li>Monthly limit: $250,000</li>
+                    <li>International: $100,000</li>
+                </ul>
+                
+                <h6>Processing Times</h6>
+                <ul class="small">
+                    <li>ACH: 1-3 business days</li>
+                    <li>Domestic Wire: Same day</li>
+                    <li>International: 1-5 business days</li>
+                </ul>
+                
+                <h6>Fees</h6>
+                <ul class="small">
+                    <li>ACH Transfer: Free</li>
+                    <li>Domestic Wire: $25</li>
+                    <li>International Wire: $45</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5><i class="fas fa-shield-alt me-2"></i>Security Features</h5>
+            </div>
+            <div class="card-body">
+                <p><i class="fas fa-check text-success me-2"></i>Multi-factor authentication required</p>
+                <p><i class="fas fa-check text-success me-2"></i>Real-time fraud monitoring</p>
+                <p><i class="fas fa-check text-success me-2"></i>Encrypted transmission</p>
+                <p><i class="fas fa-check text-success me-2"></i>SMS/Email confirmations</p>
+                
+                <div class="alert alert-info alert-sm mt-3">
+                    <i class="fas fa-phone me-1"></i>
+                    <strong>Need Help?</strong><br>
+                    Call 1-800-NEXUS-1 for assistance
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateSourceAccount() {
+    const selectElement = document.getElementById('from_account');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const infoDiv = document.getElementById('selected_account_info');
+    
+    if (selectedOption.value) {
+        // Fetch real-time account info from API
+        fetch(`/api/account_info/${selectedOption.value}`)
+            .then(response => response.json())
+            .then(data => {
+                const accountType = data.account_type;
+                const accountNumber = data.account_number;
+                let balanceText = '';
+                let maxAmount = 0;
+                
+                if (selectedOption.value === 'credit_card') {
+                    balanceText = `Available Credit: $${data.available_credit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    maxAmount = data.available_credit;
+                } else {
+                    balanceText = `Available: $${data.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    maxAmount = data.balance;
+                }
+                
+                document.getElementById('account_type_display').textContent = accountType;
+                document.getElementById('account_number_display').textContent = 'Account: ' + accountNumber;
+                document.getElementById('available_balance_display').innerHTML = balanceText;
+                
+                // Update amount max value
+                document.getElementById('amount').max = maxAmount;
+                
+                infoDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching account info:', error);
+            });
+    } else {
+        infoDiv.style.display = 'none';
+    }
+}
+
+document.getElementById('transfer_type').addEventListener('change', function() {
+    const swiftSection = document.getElementById('swift_section');
+    const internalSection = document.getElementById('internal_transfer_section');
+    const externalSection = document.getElementById('external_transfer_section');
+    
+    // Hide all sections first
+    internalSection.style.display = 'none';
+    externalSection.style.display = 'none';
+    swiftSection.style.display = 'none';
+    
+    // Clear required attributes
+    document.getElementById('recipient_name').required = false;
+    document.getElementById('recipient_account').required = false;
+    document.getElementById('routing').required = false;
+    document.getElementById('bank_name').required = false;
+    document.getElementById('swift_code').required = false;
+    document.getElementById('to_account').required = false;
+    
+    if (this.value === 'internal') {
+        internalSection.style.display = 'block';
+        document.getElementById('to_account').required = true;
+        
+        // Update destination account options to exclude source account
+        updateDestinationAccounts();
+    } else if (this.value === 'international') {
+        externalSection.style.display = 'block';
+        swiftSection.style.display = 'block';
+        
+        // Set required attributes for external transfers
+        document.getElementById('recipient_name').required = true;
+        document.getElementById('recipient_account').required = true;
+        document.getElementById('routing').required = true;
+        document.getElementById('bank_name').required = true;
+        document.getElementById('swift_code').required = true;
+    } else if (this.value === 'domestic' || this.value === 'ach') {
+        externalSection.style.display = 'block';
+        
+        // Set required attributes for external transfers
+        document.getElementById('recipient_name').required = true;
+        document.getElementById('recipient_account').required = true;
+        document.getElementById('routing').required = true;
+        document.getElementById('bank_name').required = true;
+    }
+});
+
+function updateDestinationAccounts() {
+    const fromAccount = document.getElementById('from_account').value;
+    const toAccountSelect = document.getElementById('to_account');
+    
+    // Enable all options first
+    for (let option of toAccountSelect.options) {
+        option.disabled = false;
+        option.style.display = 'block';
+    }
+    
+    // Disable the selected source account
+    if (fromAccount) {
+        for (let option of toAccountSelect.options) {
+            if (option.value === fromAccount) {
+                option.disabled = true;
+                option.style.display = 'none';
+            }
+        }
+    }
+    
+    // Reset selection if it's the same as source
+    if (toAccountSelect.value === fromAccount) {
+        toAccountSelect.value = '';
+    }
+}
+
+// Update destination accounts when source account changes
+document.getElementById('from_account').addEventListener('change', function() {
+    updateDestinationAccounts();
+});
+
+document.getElementById('transferForm').addEventListener('submit', function(e) {
+    const transferBtn = document.getElementById('transferBtn');
+    const transferText = document.getElementById('transferText');
+    const transferSpinner = document.getElementById('transferSpinner');
+    const transferType = document.getElementById('transfer_type').value;
+    const fromAccount = document.getElementById('from_account').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    
+    // Validate required fields
+    if (!fromAccount) {
+        e.preventDefault();
+        alert('Please select a source account.');
+        return;
+    }
+    
+    if (!transferType) {
+        e.preventDefault();
+        alert('Please select a transfer type.');
+        return;
+    }
+    
+    if (transferType === 'internal') {
+        const toAccount = document.getElementById('to_account').value;
+        if (!toAccount) {
+            e.preventDefault();
+            alert('Please select a destination account for internal transfers.');
+            return;
+        }
+        if (fromAccount === toAccount) {
+            e.preventDefault();
+            alert('Cannot transfer to the same account.');
+            return;
+        }
+    }
+    
+    // Check amount validation
+    const maxAmount = parseFloat(document.getElementById('amount').max);
+    if (amount > maxAmount) {
+        e.preventDefault();
+        alert('Transfer amount exceeds available balance/credit.');
+        return;
+    }
+    
+    transferBtn.disabled = true;
+    transferText.textContent = 'Processing Transfer...';
+    transferSpinner.style.display = 'inline-block';
+});
+
+function verifyAccount() {
+    const accountNumber = document.getElementById('recipient_account').value;
+    const routingNumber = document.getElementById('routing').value;
+    
+    if (!accountNumber || !routingNumber) {
+        alert('Please enter both account number and routing number first.');
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Verifying...';
+    btn.disabled = true;
+    
+    fetch('/api/verify_account', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            account_number: accountNumber,
+            routing_number: routingNumber
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            if (data.valid) {
+                btn.innerHTML = '<i class="fas fa-check text-success me-1"></i>Verified';
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-outline-secondary');
+                
+                if (data.bank_name) {
+                    document.getElementById('bank_name').value = data.bank_name;
+                }
+            } else {
+                alert('Account verification failed: ' + (data.error || 'Invalid account information'));
+            }
+        }, 2000);
+    })
+    .catch(error => {
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('Verification service temporarily unavailable. Please try again later.');
+        }, 2000);
+    });
+}
+
+// Refresh balances when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh account balances every 30 seconds for realism
+    setInterval(refreshAllBalances, 30000);
+});
+
+function refreshAllBalances() {
+    fetch('/api/balance')
+        .then(response => response.json())
+        .then(data => {
+            // Update any displayed balances on the page
+            const selectedAccount = document.getElementById('from_account').value;
+            if (selectedAccount && data.accounts[selectedAccount]) {
+                updateSourceAccount(); // Refresh the displayed balance
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing balances:', error);
+        });
+}
+</script>
+
+<style>
+.alert-sm {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

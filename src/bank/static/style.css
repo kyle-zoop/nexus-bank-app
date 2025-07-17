@@ -1,0 +1,687 @@
+/* Modern Nexus Digital Bank Styling */
+
+:root {
+    --primary-color: #1e40af;      /* Deep navy blue */
+    --primary-dark: #1e3a8a;       /* Darker navy blue */
+    --secondary-color: #64748b;     /* Slate gray */
+    --success-color: #10b981;       /* Emerald green */
+    --warning-color: #f59e0b;       /* Amber */
+    --danger-color: #ef4444;        /* Red */
+    --info-color: #3b82f6;          /* Blue */
+    --dark-bg: #0f172a;             /* Dark slate */
+    --card-bg: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --gradient-primary: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    --gradient-secondary: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Icon styling */
+.nexus-icon {
+    height: 32px;
+    width: auto;
+    filter: brightness(1.1);
+    transition: all 0.3s ease;
+}
+
+.nexus-icon:hover {
+    filter: brightness(1.2) drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    transform: scale(1.05);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    color: var(--text-primary);
+    font-weight: 400;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Modern Navigation */
+.nexus-nav {
+    background: var(--gradient-primary);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    color: white !important;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: white !important;
+    transform: translateY(-1px);
+}
+
+.navbar-brand img {
+    filter: brightness(1.1);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover img {
+    filter: brightness(1.2) drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    transform: scale(1.05);
+}
+
+.brand-text {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.brand-sub {
+    font-weight: 400;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-left: 0.25rem;
+}
+
+/* Logo styling for different contexts */
+.logo-nav {
+    height: 30px;
+    width: auto;
+}
+
+.logo-footer {
+    height: 24px;
+    width: auto;
+    filter: brightness(0.9);
+}
+
+.logo-hero {
+    height: 60px;
+    width: auto;
+}
+
+/* Modern Cards */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 16px 16px 0 0 !important;
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Hero Section */
+.hero-section {
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-xl);
+    border-radius: 0 0 24px 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.5;
+}
+
+/* Modern Buttons */
+.btn {
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+    background: var(--gradient-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+    color: white;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success-color), #059669);
+    color: white;
+}
+
+.btn-outline-success {
+    border: 2px solid var(--success-color);
+    color: var(--success-color);
+}
+
+.btn-outline-success:hover {
+    background: var(--success-color);
+    color: white;
+}
+
+/* Text and Background Colors */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.bg-primary {
+    background: var(--gradient-primary) !important;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, var(--success-color), #059669) !important;
+}
+
+.bg-info {
+    background: var(--gradient-secondary) !important;
+}
+
+/* Account Balance Cards */
+.balance-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.balance-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.balance-card.asset-card {
+    border-left: 4px solid var(--success-color);
+}
+
+.balance-card.liability-card {
+    border-left: 4px solid var(--warning-color);
+}
+
+.balance-card.investment-card {
+    border-left: 4px solid var(--info-color);
+}
+
+/* Modern Table Styling */
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table thead th {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: none;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 1rem;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(99, 102, 241, 0.05);
+    transform: scale(1.01);
+}
+
+.table tbody td {
+    border: none;
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+/* Badges */
+.badge {
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+/* Modern Forms */
+.form-control {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--card-bg);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    outline: none;
+}
+
+/* Alert Styling */
+.alert {
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-left-color: var(--success-color);
+    color: #065f46;
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-left-color: var(--danger-color);
+    color: #991b1b;
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    border-left-color: var(--info-color);
+    color: #1e40af;
+}
+
+/* Loading animations */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Bank-specific styling */
+.account-balance {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--success-color);
+}
+
+.transaction-row:hover {
+    background-color: #f8f9fa;
+}
+
+.security-badge {
+    background-color: #e8f5e8;
+    color: var(--success-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Form styling */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+}
+
+/* Alert improvements */
+.alert {
+    border: none;
+    border-radius: 6px;
+}
+
+.alert-success {
+    background-color: #e8f5e8;
+    color: var(--success-color);
+}
+
+.alert-info {
+    background-color: #e3f2fd;
+    color: var(--info-color);
+}
+
+.alert-warning {
+    background-color: #fff3e0;
+    color: var(--warning-color);
+}
+
+.alert-danger {
+    background-color: #ffebee;
+    color: var(--danger-color);
+}
+
+/* Footer styling */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .container {
+        padding: 0 1rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+    }
+    
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+    
+    .btn {
+        padding: 0.6rem 1.25rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Table improvements */
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-top: none;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(25, 118, 210, 0.05);
+}
+
+/* Animation for highlighting elements */
+@keyframes highlight {
+    0% { background-color: transparent; }
+    50% { background-color: rgba(25, 118, 210, 0.1); }
+    100% { background-color: transparent; }
+}
+
+.highlight {
+    animation: highlight 1s ease-in-out;
+}
+
+/* Progress indicator for forms */
+.processing {
+    position: relative;
+}
+
+.processing::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Custom scrollbar for chat */
+.chat-window::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-window::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.chat-window::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.chat-window::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Trust indicators */
+.trust-indicator {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e8f5e8;
+    color: var(--success-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin: 2px;
+}
+
+.trust-indicator i {
+    margin-right: 4px;
+}
+
+/* Bank card styling */
+.bank-card {
+    background: linear-gradient(135deg, #1976d2, #1565c0);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 10px 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.bank-card-number {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    margin: 10px 0;
+}
+
+/* Status indicators */
+.status-online {
+    color: var(--success-color);
+}
+
+.status-processing {
+    color: var(--warning-color);
+}
+
+.status-error {
+    color: var(--danger-color);
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
+/* Modern Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.fade-in {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+/* Glassmorphism Effect */
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --card-bg: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+}
+
+/* Special Effects for Balance Numbers */
+.balance-amount {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+/* Hover Effects for Interactive Elements */
+.interactive-hover {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.interactive-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.status-active {
+    background-color: var(--success-color);
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+.status-pending {
+    background-color: var(--warning-color);
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+}
+
+.status-inactive {
+    background-color: var(--secondary-color);
+}
