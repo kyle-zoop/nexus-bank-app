@@ -11,10 +11,6 @@
                 <p class="mb-0">Access Your Nexus Digital Bank Account</p>
             </div>
             <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Demo Account:</strong> Username: <code>demo123</code>, Password: <code>secure456</code>
-                </div>
 
                 <form method="POST" id="loginForm">
                     {% if show_lockout %}
@@ -295,6 +291,14 @@ if (twoFAInput) {
     startCountdown();
 }
 
+function clearActiveCountdown() {
+    // Clear any existing countdown timer
+    if (window.activeCountdownTimer) {
+        clearInterval(window.activeCountdownTimer);
+        window.activeCountdownTimer = null;
+    }
+}
+
 function resend2FA() {
     const btn = event.target;
     const originalText = btn.innerHTML;
@@ -302,15 +306,65 @@ function resend2FA() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
     btn.disabled = true;
     
-    // Simulate sending new code
-    setTimeout(() => {
-        // Show confirmation message without demo code
+    // Clear any existing countdown timer before starting new one
+    clearActiveCountdown();
+    
+    // Call backend to generate new 2FA code
+    fetch('/resend_2fa', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show confirmation message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-mobile-alt me-2"></i>
+                <strong>New verification code sent!</strong><br>
+                ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.querySelector('.card-body').insertBefore(alertDiv, document.getElementById('loginForm'));
+            
+            // Reset countdown timer with fresh timer
+            startCountdown();
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        } else {
+            // Show error message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> ${data.error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.querySelector('.card-body').insertBefore(alertDiv, document.getElementById('loginForm'));
+        }
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        // Show generic error message
         const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
         alertDiv.innerHTML = `
-            <i class="fas fa-mobile-alt me-2"></i>
-            <strong>New verification code sent!</strong><br>
-            Please check your registered device for the new code.
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Error:</strong> Unable to resend code. Please try again.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
         
@@ -318,20 +372,14 @@ function resend2FA() {
         
         btn.innerHTML = originalText;
         btn.disabled = false;
-        
-        // Reset countdown timer
-        startCountdown();
-        
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.remove();
-            }
-        }, 5000);
-    }, 2000);
+    });
+    });
 }
 
 function startCountdown() {
+    // Clear any existing countdown timer before starting new one
+    clearActiveCountdown();
+    
     let timeLeft = 300; // 5 minutes
     
     // Remove existing countdown if present
@@ -350,7 +398,8 @@ function startCountdown() {
     
     document.querySelector('.card-body').appendChild(countdownElement);
     
-    const timer = setInterval(() => {
+    // Store the timer globally so we can clear it
+    window.activeCountdownTimer = setInterval(() => {
         timeLeft--;
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
@@ -362,7 +411,8 @@ function startCountdown() {
         }
         
         if (timeLeft <= 0) {
-            clearInterval(timer);
+            clearInterval(window.activeCountdownTimer);
+            window.activeCountdownTimer = null;
             countdownElement.className = 'alert alert-danger mt-3 text-center';
             countdownElement.innerHTML = `
                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -383,12 +433,16 @@ function startCountdown() {
 
 // Lockout countdown timer
 if (document.getElementById('lockoutCountdown')) {
-    {% if lockout_time %}
-    const lockoutTime = {{ lockout_time }};
-    {% else %}
-    const lockoutTime = 0;
-    {% endif %}
-    startLockoutCountdown(lockoutTime);
+    const lockoutTime = {{ lockout_time|default(900) }};  // Default to 15 minutes
+    console.log('Lockout time from server:', lockoutTime, 'seconds');
+    
+    if (lockoutTime > 0) {
+        startLockoutCountdown(lockoutTime);
+    } else {
+        // Fallback to 15 minutes if time is 0
+        console.log('Lockout time was 0, using fallback of 900 seconds');
+        startLockoutCountdown(900);
+    }
 }
 
 function startLockoutCountdown(initialTime) {

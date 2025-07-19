@@ -5,7 +5,7 @@
 Following Python best practices, the project has been reorganized into a clean, professional structure:
 
 ```
-c:\Projects\bank\
+c:\Projects\nexus-bank-app\
 │
 ├── 📁 src/                          # Source code
 │   └── 📁 bank/                     # Main application package
@@ -16,38 +16,52 @@ c:\Projects\bank\
 │       ├── auth.py                  # Authentication & security
 │       ├── api_routes.py            # API endpoints
 │       ├── transfer_utils.py        # Transfer processing
+│       ├── totp_manager.py          # 2FA code management
+│       ├── transaction_generator.py # Transaction generation
 │       ├── 📁 static/               # CSS, JS, images
-│       │   └── style.css
+│       │   ├── style.css
+│       │   ├── script.js
+│       │   └── *.svg                # Icons and logos
 │       └── 📁 templates/            # HTML templates
 │           ├── index.html
 │           ├── login.html
 │           ├── dashboard.html
 │           ├── transfer.html
 │           ├── statements.html
+│           ├── admin.html
 │           └── support.html
 │
-├── 📁 tests/                        # Test suite
+├── 📁 tests/                        # Test suite (all test files)
 │   ├── __init__.py                  # Test package
-│   ├── test_users.py                # User account tests
-│   ├── test_2fa_fix.py              # 2FA system tests
-│   ├── test_blacklist.py            # Blacklist validation
-│   ├── test_lockout_independence.py # Multi-user lockout tests
-│   ├── test_web_lockout.py          # Web interface tests
-│   ├── test_transfers.py            # Transfer system tests
-│   └── debug_lockout.py             # Debugging utilities
+│   ├── conftest.py                  # Test configuration
+│   ├── test_*.py                    # All test modules
+│   ├── verify_*.py                  # Verification scripts
+│   └── debug_*.py                   # Debugging utilities
 │
 ├── 📁 docs/                         # Documentation
 │   ├── README.md                    # Main documentation
+│   ├── PROJECT_STRUCTURE.md         # This file
 │   ├── DEVELOPMENT_SUMMARY.md       # Feature summary
 │   ├── 2FA_IMPLEMENTATION.md        # 2FA system details
-│   └── MODULAR_STRUCTURE.md         # Architecture guide
+│   ├── ADMIN_GUIDE.md               # Admin panel guide
+│   └── *.md                         # All other documentation
 │
 ├── 📁 scripts/                      # Launch & utility scripts
 │   ├── run_bank.bat                 # Windows launcher
-│   └── run_bank.ps1                 # PowerShell launcher
+│   ├── run_bank.ps1                 # PowerShell launcher
+│   ├── ide_setup.py                 # IDE configuration
+│   └── update_transactions.py       # Transaction utilities
 │
-├── 📁 __pycache__/                  # Python cache (auto-generated)
+├── 📁 .vscode/                      # VS Code configuration
+├── 📁 .git/                         # Git repository data
 │
+├── .gitignore                        # Git ignore patterns
+├── fake-bank.code-workspace          # VS Code workspace
+├── pyproject.toml                    # Python project configuration
+├── pyrightconfig.json                # Python type checking config
+├── requirements.txt                  # Python dependencies
+├── run_app.py                        # Main application entry point
+└── setup.py                          # Package setup script
 ├── run_app.py                       # Main entry point
 ├── requirements.txt                 # Python dependencies
 └── PROJECT_STRUCTURE.md             # This file

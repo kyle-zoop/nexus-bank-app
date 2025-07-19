@@ -24,7 +24,7 @@
                             <div class="col-md-6">
                                 <p><strong>Country:</strong> <span id="bank-country">{{ request.args.get('bank_country', 'N/A') }}</span></p>
                                 <p><strong>Purpose:</strong> <span id="purpose">{{ request.args.get('purpose', 'N/A') }}</span></p>
-                                <p><strong>Reference:</strong> WTR-{{ moment().format('YYYYMMDD') }}-{{ range(10000, 99999) | random }}</p>
+                                <p><strong>Reference:</strong> WTR-{{ now.strftime('%Y%m%d') }}-{{ random.randint(10000, 99999) }}</p>
                             </div>
                         </div>
                     </div>

@@ -3,7 +3,8 @@ Security and authentication utilities for the fake bank application
 """
 import time
 import random
-from .config import LOCKOUT_DURATION, BLACKLISTED_2FA_CODES, MIN_DELAY, MAX_DELAY
+from .config import LOCKOUT_DURATION, MIN_DELAY, MAX_DELAY
+from .totp_manager import totp_manager
 
 # Account lockout tracking
 ACCOUNT_LOCKOUTS = {}
@@ -27,18 +28,24 @@ def is_account_locked(username):
 
 def trigger_account_lockout(username):
     """Lock account for 15 minutes after 3 blacklisted code attempts"""
+    lockout_until = time.time() + LOCKOUT_DURATION
     ACCOUNT_LOCKOUTS[username] = {
-        'locked_until': time.time() + LOCKOUT_DURATION,
+        'locked_until': lockout_until,
         'reason': 'Suspicious activity detected - Multiple invalid security codes'
     }
-
-def is_blacklisted_code(code):
-    """Check if a 2FA code is blacklisted"""
-    return code in BLACKLISTED_2FA_CODES
 
 def simulate_processing():
     """Simulate realistic processing delays"""
     time.sleep(random.uniform(MIN_DELAY, MAX_DELAY))
+
+def is_valid_totp_code(username, code):
+    """Check if a 2FA code is valid using TOTP manager"""
+    # Check if it's a valid generated code
+    if totp_manager.is_valid_code(username, code):
+        return True, 'valid'
+    
+    # All other codes are invalid and should trigger lockout behavior
+    return False, 'invalid_suspicious'
 
 def get_2fa_method_message(method, user_data):
     """Get appropriate 2FA message based on method"""

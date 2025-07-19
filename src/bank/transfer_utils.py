@@ -54,7 +54,9 @@ def process_internal_transfer(user_data, from_account, to_account, amount):
         'date': today,
         'description': f'Transfer to {dest_account["account_type"]}',
         'amount': -amount,
-        'balance': source_account['balance']
+        'balance': source_account['balance'],
+        'type': 'user_made',
+        'created_date': datetime.now().isoformat()
     }
     source_account['transactions'].insert(0, source_transaction)
     
@@ -63,7 +65,9 @@ def process_internal_transfer(user_data, from_account, to_account, amount):
         'date': today,
         'description': f'Transfer from {source_account["account_type"]}',
         'amount': amount,
-        'balance': dest_account['balance']
+        'balance': dest_account['balance'],
+        'type': 'user_made',
+        'created_date': datetime.now().isoformat()
     }
     dest_account['transactions'].insert(0, dest_transaction)
     
@@ -72,8 +76,12 @@ def process_internal_transfer(user_data, from_account, to_account, amount):
     dest_account['transactions'] = dest_account['transactions'][:10]
     
     confirmation_id = str(uuid.uuid4())[:8].upper()
-    flash(f'Internal transfer of ${amount:,.2f} completed successfully! Confirmation ID: {confirmation_id}', 'success')
-    flash(f'Transferred from {source_account["account_type"]} to {dest_account["account_type"]}', 'info')
+    try:
+        flash(f'Internal transfer of ${amount:,.2f} completed successfully! Confirmation ID: {confirmation_id}', 'success')
+        flash(f'Transferred from {source_account["account_type"]} to {dest_account["account_type"]}', 'info')
+    except RuntimeError:
+        # Working outside request context (testing mode)
+        pass
     
     return True
 
@@ -109,7 +117,9 @@ def process_external_transfer(user_data, from_account, amount, recipient, transf
         'date': today,
         'description': transfer_description,
         'amount': -amount,
-        'balance': source_account['balance']
+        'balance': source_account['balance'],
+        'type': 'user_made',
+        'created_date': datetime.now().isoformat()
     }
     source_account['transactions'].insert(0, source_transaction)
     source_account['transactions'] = source_account['transactions'][:10]
@@ -121,7 +131,11 @@ def process_external_transfer(user_data, from_account, amount, recipient, transf
         'international': '1-5 business days'
     }
     
-    flash(f'{transfer_type.title()} transfer of ${amount:,.2f} initiated. Confirmation ID: {confirmation_id}', 'success')
-    flash(f'Transfer to {recipient} is being processed and may take {processing_time[transfer_type]}.', 'info')
+    try:
+        flash(f'{transfer_type.title()} transfer of ${amount:,.2f} initiated. Confirmation ID: {confirmation_id}', 'success')
+        flash(f'Transfer to {recipient} is being processed and may take {processing_time[transfer_type]}.', 'info')
+    except RuntimeError:
+        # Working outside request context (testing mode)
+        pass
     
     return True

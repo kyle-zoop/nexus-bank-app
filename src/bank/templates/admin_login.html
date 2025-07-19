@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Nexus Bank</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .admin-login-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .admin-login-header {
+            margin-bottom: 2rem;
+            color: #1a472a;
+        }
+        
+        .admin-login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .admin-input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .admin-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .admin-button:hover {
+            background: #218838;
+        }
+        
+        .warning-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #1a472a;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-login-container">
+        <div class="admin-login-header">
+            <h1>🔐 Admin Access</h1>
+            <p>Nexus Bank Management Console</p>
+        </div>
+        
+        <div class="warning-message">
+            <strong>⚠️ Authorized Personnel Only</strong><br>
+            This area is restricted to system administrators.
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" class="admin-login-form">
+            <input 
+                type="password" 
+                name="admin_password" 
+                placeholder="Admin Password" 
+                class="admin-input"
+                required 
+                autofocus
+            >
+            <button type="submit" class="admin-button">
+                🔓 Access Admin Panel
+            </button>
+        </form>
+        
+        <a href="{{ url_for('home') }}" class="back-link">← Back to Home</a>
+    </div>
+</body>
+</html>

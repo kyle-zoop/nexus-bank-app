@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Nexus Bank</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #1a472a;
+        }
+        
+        .admin-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+        
+        .admin-section h3 {
+            margin-top: 0;
+            color: #1a472a;
+        }
+        
+        .admin-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 1rem;
+            margin-bottom: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .admin-button:hover {
+            background: #218838;
+        }
+        
+        .admin-button.danger {
+            background: #dc3545;
+        }
+        
+        .admin-button.danger:hover {
+            background: #c82333;
+        }
+        
+        .status-message {
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1a472a;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #1a472a;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🔐 Admin Panel</h1>
+            <p>Nexus Bank Management Console</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="status-message status-{{ 'success' if category == 'success' else 'error' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="admin-section">
+            <h3>📊 System Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ user_count }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ account_count }}</div>
+                    <div class="stat-label">Total Accounts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ transaction_count }}</div>
+                    <div class="stat-label">Total Transactions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ user_made_transactions }}</div>
+                    <div class="stat-label">User-Made Transactions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ system_generated_transactions }}</div>
+                    <div class="stat-label">System-Generated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ last_update or 'Never' }}</div>
+                    <div class="stat-label">Last Data Update</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-section">
+            <h3>🔄 Transaction Management</h3>
+            <p><strong>Enhanced Transaction System:</strong> User-made transactions and scammer bait are preserved when regenerating system transactions.</p>
+            
+            <form method="POST" action="{{ url_for('admin_panel') }}" style="display: inline;">
+                <input type="hidden" name="action" value="regenerate_transactions">
+                <button type="submit" class="admin-button">
+                    🔄 Regenerate System Transactions
+                </button>
+            </form>
+            <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                This will generate new background transactions while preserving all user transfers, payments, and <strong>scammer bait transactions</strong>.
+            </p>
+            
+            <form method="POST" action="{{ url_for('admin_panel') }}" style="display: inline;">
+                <input type="hidden" name="action" value="clear_old_transactions">
+                <button type="submit" class="admin-button danger" onclick="return confirm('This will remove transactions older than 6 months. Continue?')">
+                    🗑️ Clear Old Transactions
+                </button>
+            </form>
+            
+            <p><small><strong>Note:</strong> Regenerating transactions will add realistic new transactions for the past 10 days to keep the data current. This is safe to run multiple times.</small></p>
+        </div>
+        
+        <div class="admin-section">
+            <h3>💰 Manual Transaction Control</h3>
+            <p><strong>Scam Baiting Tool:</strong> Add custom transactions to match or counter what scammers edit in the source code.</p>
+            
+            <form method="POST" action="{{ url_for('admin_panel') }}">
+                <input type="hidden" name="action" value="add_manual_transaction">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">User:</label>
+                        <select name="username" id="username" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="">Select User</option>
+                            <option value="vhamilton">Victoria Hamilton (Wealthy)</option>
+                            <option value="janderson47">John Anderson (Middle Class)</option>
+                            <option value="sbrooks85">Samuel Brooks (Poor)</option>
+                            <option value="emartinez48">Evelyn Martinez (Retiree)</option>
+                            <option value="achen22">Alexandra Chen (Student)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="account_name" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Account:</label>
+                        <select name="account_name" id="account_name" required disabled style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; opacity: 0.5;">
+                            <option value="">Select Account</option>
+                        </select>
+                        <small style="color: #666; font-size: 0.8rem;">Select a user first to see available accounts</small>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="description" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Description:</label>
+                        <input type="text" name="description" id="description" placeholder="e.g., Fake Transfer From Scammer" required 
+                               style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    
+                    <div>
+                        <label for="amount" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Amount ($):</label>
+                        <input type="number" name="amount" id="amount" step="0.01" placeholder="0.00" required 
+                               style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    
+                    <div>
+                        <label for="date" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Date:</label>
+                        <input type="date" name="date" id="date" value="{{ current_date }}"
+                               style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label for="transaction_type" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Transaction Type:</label>
+                    <select name="transaction_type" id="transaction_type" style="width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="user_made">User Made (looks like user action)</option>
+                        <option value="system_generated">System Generated (looks automatic)</option>
+                        <option value="scammer_bait">Scammer Bait (special marking)</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="admin-button" style="background: #dc3545;">
+                    🎯 Add Bait Transaction
+                </button>
+            </form>
+            
+            <div style="margin-top: 1rem; padding: 1rem; background: #e7f3ff; border-radius: 4px; border-left: 4px solid #007bff;">
+                <strong>💡 Scam Baiting Tips:</strong>
+                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    <li><strong>Positive amounts</strong> = deposits/income (e.g., +50000 for fake lottery)</li>
+                    <li><strong>Negative amounts</strong> = expenses/withdrawals (e.g., -25 for fees)</li>
+                    <li><strong>Match their edits:</strong> If they fake a $10,000 deposit, add it here to make it "real"</li>
+                    <li><strong>Counter-bait:</strong> Add suspicious transactions they'll have to explain</li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 1rem; padding: 1rem; background: #d4edda; border-radius: 4px; border-left: 4px solid #28a745;">
+                <strong>🛡️ Persistence Guarantee:</strong> All scammer bait and manual transactions will survive system regeneration! 
+                Your psychological warfare tools are permanent until manually removed.
+            </div>
+        </div>
+        
+        <div class="admin-section">
+            <h3>🔐 Security Management</h3>
+            <p>Manage account security and lockout states.</p>
+            
+            <form method="POST" action="{{ url_for('admin_panel') }}" style="display: inline;">
+                <input type="hidden" name="action" value="clear_lockouts">
+                <button type="submit" class="admin-button">
+                    🔓 Clear All Account Lockouts
+                </button>
+            </form>
+            
+            <form method="POST" action="{{ url_for('admin_panel') }}" style="display: inline;">
+                <input type="hidden" name="action" value="reset_2fa_attempts">
+                <button type="submit" class="admin-button">
+                    🔑 Reset 2FA Attempts
+                </button>
+            </form>
+        </div>
+        
+        <div class="admin-section">
+            <h3>📱 2FA Code Management</h3>
+            <p><strong>Secure Scam Baiting:</strong> Control which 2FA codes work to prevent unauthorized access by scammers.</p>
+            
+            <!-- 2FA Statistics -->
+            <div class="stats-grid" style="margin-bottom: 1rem;">
+                <div class="stat-card">
+                    <div class="stat-number">{{ totp_stats.total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ totp_stats.users_with_active_codes }}</div>
+                    <div class="stat-label">Users with Active Codes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ totp_stats.total_active_codes }}</div>
+                    <div class="stat-label">Active Codes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ totp_stats.total_generated_today }}</div>
+                    <div class="stat-label">Generated Today</div>
+                </div>
+            </div>
+            
+            <!-- 2FA Control Buttons -->
+            <div style="margin-bottom: 1rem;">
+                <form method="POST" action="{{ url_for('admin_panel') }}" style="display: inline;">
+                    <input type="hidden" name="action" value="generate_2fa_codes">
+                    <button type="submit" class="admin-button" style="background: #28a745;">
+                        🔐 Generate New Codes for All Users
+                    </button>
+                </form>
+                
+                <form method="POST" action="{{ url_for('admin_panel') }}" style="display: inline;">
+                    <input type="hidden" name="action" value="expire_all_2fa">
+                    <button type="submit" class="admin-button danger" onclick="return confirm('This will expire ALL active 2FA codes. Continue?')">
+                        ⚠️ Expire All Active Codes
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Single User Code Generation -->
+            <div style="margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 4px;">
+                <h4 style="margin-top: 0;">Generate Code for Specific User</h4>
+                <form method="POST" action="{{ url_for('admin_panel') }}" style="display: flex; gap: 1rem; align-items: end;">
+                    <input type="hidden" name="action" value="generate_single_2fa">
+                    <div>
+                        <label for="target_username" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">User:</label>
+                        <select name="target_username" id="target_username" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="">Select User</option>
+                            <option value="vhamilton">Victoria Hamilton (Wealthy)</option>
+                            <option value="janderson47">John Anderson (Middle Class)</option>
+                            <option value="sbrooks85">Samuel Brooks (Poor)</option>
+                            <option value="emartinez48">Evelyn Martinez (Retiree)</option>
+                            <option value="achen22">Alexandra Chen (Student)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="admin-button" style="background: #17a2b8;">
+                        🎯 Generate Single Code
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Active Codes Display -->
+            <div style="margin-top: 1rem;">
+                <h4>🔢 Currently Active 2FA Codes</h4>
+                {% if active_2fa_codes %}
+                    {% for username, codes in active_2fa_codes.items() %}
+                        {% if codes %}
+                            <div style="margin-bottom: 1rem; padding: 1rem; background: #e8f5e8; border-radius: 4px; border-left: 4px solid #28a745;">
+                                <h5 style="margin: 0 0 0.5rem 0; color: #1a472a;">{{ username }}</h5>
+                                {% for code_info in codes %}
+                                    <div style="font-family: monospace; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                                        <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">{{ code_info.code }}</span>
+                                        <span style="margin-left: 1rem; color: #666; font-size: 0.9rem;">
+                                            Expires: {{ code_info.expires_at.strftime('%H:%M:%S') }} | 
+                                            Method: {{ code_info.method }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div style="padding: 1rem; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107; color: #856404;">
+                        <strong>No active 2FA codes found.</strong> Generate codes using the buttons above to enable secure login control.
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Security Info -->
+            <div style="margin-top: 1rem; padding: 1rem; background: #e7f3ff; border-radius: 4px; border-left: 4px solid #007bff;">
+                <strong>🛡️ Security Notes:</strong>
+                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    <li><strong>Only generated codes work:</strong> All other 6-digit codes will be rejected</li>
+                    <li><strong>Codes expire in 30 seconds:</strong> Like real TOTP authenticators</li>
+                    <li><strong>One-time use:</strong> Each code can only be used once</li>
+                    <li><strong>Blacklisted codes trigger lockouts:</strong> Maintains realistic security behavior</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="admin-section">
+            <h3>⚙️ System Information</h3>
+            <p><strong>Current Date:</strong> {{ current_date }}</p>
+            <p><strong>Server Time:</strong> {{ current_time }}</p>
+            <p><strong>Debug Mode:</strong> {{ 'Enabled' if debug_mode else 'Disabled' }}</p>
+            <p><strong>Application Version:</strong> 1.0.0</p>
+        </div>
+        
+        <a href="{{ url_for('home') }}" class="back-link">← Back to Home</a>
+    </div>
+
+    <script>
+        // User account mapping - shows which accounts each user has
+        const userAccounts = {
+            'vhamilton': [
+                {value: 'checking', label: 'Executive Platinum Checking'},
+                {value: 'savings', label: 'Private Wealth Savings'},
+                {value: 'credit_card', label: 'Black Card - Unlimited'},
+                {value: 'mortgage', label: 'Luxury Estate Mortgage'},
+                {value: 'investment', label: 'Private Investment Portfolio'}
+            ],
+            'janderson47': [
+                {value: 'checking', label: 'Everyday Checking'},
+                {value: 'savings', label: 'Standard Savings'},
+                {value: 'auto_loan', label: 'Auto Loan - 2024 BMW X5'}
+            ],
+            'sbrooks85': [
+                {value: 'checking', label: 'Basic Checking'}
+            ],
+            'emartinez48': [
+                {value: 'checking', label: 'Senior Checking'},
+                {value: 'savings', label: 'Retirement Savings'}
+            ],
+            'achen22': [
+                {value: 'checking', label: 'Student Checking'},
+                {value: 'student_loan', label: 'HECS-HELP Student Loan'}
+            ]
+        };
+
+        // Function to update account dropdown based on selected user
+        function updateAccountDropdown() {
+            const userSelect = document.getElementById('username');
+            const accountSelect = document.getElementById('account_name');
+            const selectedUser = userSelect.value;
+
+            // Clear existing options except the first one
+            accountSelect.innerHTML = '<option value="">Select Account</option>';
+
+            if (selectedUser && userAccounts[selectedUser]) {
+                // Add accounts for the selected user
+                userAccounts[selectedUser].forEach(function(account) {
+                    const option = document.createElement('option');
+                    option.value = account.value;
+                    option.textContent = account.label;
+                    accountSelect.appendChild(option);
+                });
+                
+                // Enable the account dropdown with smooth transition
+                accountSelect.disabled = false;
+                accountSelect.style.opacity = '1';
+                accountSelect.style.transition = 'opacity 0.3s ease';
+                
+                // Add visual feedback
+                accountSelect.style.borderColor = '#28a745';
+                setTimeout(() => {
+                    accountSelect.style.borderColor = '#ccc';
+                }, 1000);
+                
+            } else {
+                // Disable the account dropdown if no user selected
+                accountSelect.disabled = true;
+                accountSelect.style.opacity = '0.5';
+                accountSelect.style.borderColor = '#ccc';
+            }
+        }
+
+        // Add event listener to user dropdown
+        document.getElementById('username').addEventListener('change', updateAccountDropdown);
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAccountDropdown();
+        });
+    </script>
+</body>
+</html>

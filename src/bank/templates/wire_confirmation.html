@@ -21,7 +21,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h6>Transfer Initiated</h6>
-                                <p class="text-muted mb-0">Today, {{ moment().format('h:mm A') }}</p>
+                                <p class="text-muted mb-0">Today, {{ now.strftime('%I:%M %p') }}</p>
                             </div>
                         </div>
                         <div class="timeline-item completed">
@@ -30,7 +30,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h6>Identity Verification Completed</h6>
-                                <p class="text-muted mb-0">Today, {{ moment().add(15, 'minutes').format('h:mm A') }}</p>
+                                <p class="text-muted mb-0">Today, {{ (now + timedelta(minutes=15)).strftime('%I:%M %p') }}</p>
                             </div>
                         </div>
                         <div class="timeline-item active">
@@ -39,7 +39,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h6>Compliance Hold Applied</h6>
-                                <p class="text-muted mb-0">Today, {{ moment().add(30, 'minutes').format('h:mm A') }}</p>
+                                <p class="text-muted mb-0">Today, {{ (now + timedelta(minutes=30)).strftime('%I:%M %p') }}</p>
                                 <div class="alert alert-warning mt-2">
                                     <strong>Reason:</strong> High-value international transfer requires enhanced due diligence review under BSA/AML regulations.
                                 </div>
@@ -51,7 +51,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h6>Senior Compliance Review</h6>
-                                <p class="text-muted mb-0">Estimated: {{ moment().add(2, 'days').format('MMM D, YYYY') }}</p>
+                                <p class="text-muted mb-0">Estimated: {{ (now + timedelta(days=2)).strftime('%b %d, %Y') }}</p>
                             </div>
                         </div>
                         <div class="timeline-item pending">
@@ -60,7 +60,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h6>Transfer Released</h6>
-                                <p class="text-muted mb-0">Estimated: {{ moment().add(5, 'days').format('MMM D, YYYY') }}</p>
+                                <p class="text-muted mb-0">Estimated: {{ (now + timedelta(days=5)).strftime('%b %d, %Y') }}</p>
                             </div>
                         </div>
                     </div>
@@ -72,7 +72,7 @@
                         <h5><i class="fas fa-file-alt me-2"></i>Transfer Details</h5>
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Reference Number:</strong> WTR-{{ moment().format('YYYYMMDD') }}-{{ range(10000, 99999) | random }}</p>
+                                <p><strong>Reference Number:</strong> WTR-{{ now.strftime('%Y%m%d') }}-{{ random.randint(10000, 99999) }}</p>
                                 <p><strong>Amount:</strong> ${{ request.args.get('amount', '0.00') }}</p>
                                 <p><strong>Status:</strong> <span class="badge bg-warning">Compliance Hold</span></p>
                                 <p><strong>Hold Reason:</strong> Enhanced Due Diligence Required</p>
@@ -80,7 +80,7 @@
                             <div class="col-md-6">
                                 <p><strong>Recipient:</strong> {{ request.args.get('recipient_name', 'N/A') }}</p>
                                 <p><strong>Destination:</strong> {{ request.args.get('bank_country', 'N/A') }}</p>
-                                <p><strong>Expected Release:</strong> {{ moment().add(5, 'days').format('MMM D, YYYY') }}</p>
+                                <p><strong>Expected Release:</strong> {{ (now + timedelta(days=5)).strftime('%b %d, %Y') }}</p>
                                 <p><strong>Compliance Officer:</strong> Sarah Martinez (ID: CM-4471)</p>
                             </div>
                         </div>
@@ -256,12 +256,12 @@ function uploadDocuments() {
 }
 
 function callCompliance() {
-    showAlert('Please have your transfer reference number (WTR-{{ moment().format("YYYYMMDD") }}-{{ range(10000, 99999) | random }}) ready when calling.', 'info');
+    showAlert('Please have your transfer reference number (WTR-{{ now.strftime("%Y%m%d") }}-{{ random.randint(10000, 99999) }}) ready when calling.', 'info');
 }
 
 function emailCompliance() {
-    const subject = 'Wire Transfer Hold Inquiry - WTR-{{ moment().format("YYYYMMDD") }}-{{ range(10000, 99999) | random }}';
-    const body = 'Dear Compliance Team,%0D%0A%0D%0AI am writing regarding my wire transfer that is currently under compliance hold.%0D%0A%0D%0AReference Number: WTR-{{ moment().format("YYYYMMDD") }}-{{ range(10000, 99999) | random }}%0D%0AAmount: ${{ request.args.get("amount", "0.00") }}%0D%0A%0D%0APlease advise on the status and any additional documentation required.%0D%0A%0D%0AThank you for your assistance.';
+    const subject = 'Wire Transfer Hold Inquiry - WTR-{{ now.strftime("%Y%m%d") }}-{{ random.randint(10000, 99999) }}';
+    const body = 'Dear Compliance Team,%0D%0A%0D%0AI am writing regarding my wire transfer that is currently under compliance hold.%0D%0A%0D%0AReference Number: WTR-{{ now.strftime("%Y%m%d") }}-{{ random.randint(10000, 99999) }}%0D%0AAmount: ${{ request.args.get("amount", "0.00") }}%0D%0A%0D%0APlease advise on the status and any additional documentation required.%0D%0A%0D%0AThank you for your assistance.';
     
     window.location.href = `mailto:compliance@nexusdigitalbank.com?subject=${subject}&body=${body}`;
 }

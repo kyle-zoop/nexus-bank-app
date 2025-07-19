@@ -61,7 +61,7 @@ def init_api_routes(app):
             return jsonify({'error': 'Account not found'}), 404
 
     @app.route('/api/resend_2fa', methods=['POST'])
-    def resend_2fa():
+    def api_resend_2fa():
         if 'pending_login' not in session:
             return jsonify({'error': 'No pending login session'}), 400
         
