@@ -31,6 +31,45 @@ env.bak/
 venv.bak/
 
 # IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Production
+*.log
+*.pid
+*.seed
+*.cover
+.coverage
+.nyc_output
+instance/
+.pytest_cache/
+
+# Development files
+*.code-workspace
+pyrightconfig.json
+pyproject.toml
+setup.py
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+temp/
+venv.bak/
+
+# IDE
 .vscode/settings.json
 .idea/
 *.swp
