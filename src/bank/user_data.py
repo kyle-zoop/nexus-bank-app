@@ -136,10 +136,10 @@ FAKE_ACCOUNTS = {
     },
     
     # Middle class user
-    'janderson47': {
-        'password': 'Password123!',
-        'name': 'John Anderson',
-        'email': 'john.anderson47@gmail.com',
+    'jcarter1973': {
+        'password': 'carter1973!',
+        'name': 'James Carter',
+        'email': 'jamesWcarter1973@gmail.com',
         'phone': '+61 3 1234 5678',
         'routing_number': '062-692',
         'swift_code': 'NEXAAU2SXXX',

@@ -21,7 +21,7 @@ class TOTPManager:
         # Secret keys per user (simulated) - using actual system usernames
         self.user_secrets = {
             'vhamilton': 'JBSWY3DPEHPK3PXP',
-            'janderson47': 'KRSXG5CTMFRGG5DF', 
+            'jcarter1973': 'KRSXG5CTMFRGG5DF', 
             'sbrooks85': 'MNFXK5BAORZXA42A',
             'emartinez48': 'PFXXK4DBPFZXA2BB',
             'achen22': 'KRUGKIDROVUWG2ZA'

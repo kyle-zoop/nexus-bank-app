@@ -452,6 +452,15 @@ footer {
         padding: 0.6rem 1.25rem;
         font-size: 0.9rem;
     }
+    
+    /* Fix for mobile card header text color */
+    .card-header h4 {
+        color: var(--text-primary) !important;
+    }
+    
+    .card-header {
+        color: var(--text-primary) !important;
+    }
 }
 
 /* Table improvements */
